@@ -1,0 +1,16 @@
+# Local lab runtime state (see docs/iceberg-lab-spec.md)
+lab/catalog.db
+lab/catalog.db-journal
+lab/warehouse/
+lab/.env
+lab/.ipynb_checkpoints/
+
+# Python / notebooks
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
