@@ -154,6 +154,6 @@ MIT for code. CC-BY-SA 4.0 for the written content.
 
 ## About the author
 
-Built by [Bill (Jiahong)](#) — PhD candidate in deep learning for aviation, builder of [SoloLakehouse](#), focused on the intersection of modern data platforms and EU financial regulation.
+Built by [Jiahong](#) — PhD candidate in deep learning for aviation, builder of [SoloLakehouse](#), focused on the intersection of modern data platforms and EU financial regulation.
 
 If you're hiring for platform / data engineering roles in Frankfurt or remote-EU, [let's talk](#).

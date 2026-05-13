@@ -1,7 +1,7 @@
 # Iceberg Lab — Build Spec
 
 **Audience:** Code agent (implementer)
-**Author:** Bill (architect)
+**Author:** Jiahong (architect)
 **Status:** Ready for execution
 **Estimated implementation time:** 30–45 min
 
@@ -293,7 +293,7 @@ Do **not** build the notebooks first. Order matters:
 
 ## 5. Acceptance Criteria
 
-The user (Bill) should be able to:
+The user (Jiahong) should be able to:
 
 - [ ] Clone the repo on a fresh machine and run `./init.sh` successfully
 - [ ] Open `00_setup_check.ipynb` and have every cell execute green
