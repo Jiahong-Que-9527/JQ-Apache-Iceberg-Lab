@@ -14,3 +14,7 @@ __pycache__/
 .DS_Store
 .idea/
 .vscode/
+
+# docs
+docs/contributor-policy.md
+AGENTS.md
