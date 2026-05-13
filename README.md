@@ -45,9 +45,9 @@ This is a **learning sandbox**, not a production deployment guide. For canonical
 | [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build spec for the local sandbox | ✅ Available |
 | [`docs/contributor-policy.md`](docs/contributor-policy.md) | Single-author contributor policy for humans and agents | ✅ Required |
 | [`AGENTS.md`](AGENTS.md) | Mandatory instructions for code agents working in this repo | ✅ Required |
-| [`lab/`](lab/) | Docker Compose + notebooks + helpers | 🚧 In progress |
+| [`lab/`](lab/) | Docker Compose + Jupyter notebooks + PyIceberg helpers | ✅ Runnable |
 
-**The experiments are usable today.** You can run them against any Iceberg environment — the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), an existing setup at your company, or the planned sandbox under [`lab/`](lab/) once it lands.
+**The experiments are usable today.** You can run them against the local sandbox under [`lab/`](lab/), the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), or an existing Iceberg setup at your company.
 
 ---
 
@@ -93,23 +93,39 @@ If you can answer all 30 without notes, you are interview-ready for any senior d
 
 ## Quick start
 
-### 1. Pick your environment
+### 1. Start the local lab
 
-Any of these works:
+```bash
+cd lab
+./init.sh
+```
 
-- **The planned local sandbox** under [`lab/`](lab/) — lightest weight, JVM-free (PyIceberg + DuckDB + MinIO). See [build spec](docs/iceberg-lab-spec.md).
-- **The official Iceberg docker-compose** — Spark-based, broader feature coverage. See [Iceberg quickstart](https://iceberg.apache.org/spark-quickstart/).
-- **Your company's existing Iceberg setup** — most experiments work against any Iceberg-compliant environment.
+Then open:
 
-### 2. Open the series index
+- JupyterLab: http://localhost:8888
+- MinIO console: http://localhost:9001
+- MinIO login: `minioadmin` / `minioadmin`
+
+Start with `notebooks/00_setup_check.ipynb`, then `notebooks/01_basics.ipynb`, then `notebooks/02_metadata_anatomy.ipynb`.
+
+### 2. Reset the lab
+
+```bash
+cd lab
+./reset.sh --confirm
+```
+
+Reset deletes `lab/warehouse/` and `lab/catalog.db`, then recreates MinIO and Jupyter. Runtime state is gitignored.
+
+### 3. Open the experiment series
 
 → [`experiments/README.md`](experiments/README.md)
 
-### 3. Set up your personal interview FAQ
+### 4. Set up your personal interview FAQ
 
 Create a local file called `interview-faq.md`. For each experiment, write your answer to the interview question **before** doing the hands-on work, and again **after**. This testing-effect loop is what makes the series stick.
 
-### 4. Start with Experiment 01
+### 5. Start with Experiment 01
 
 → [`experiments/01-first-table.md`](experiments/01-first-table.md)
 
@@ -156,15 +172,15 @@ If you're interviewing in Frankfurt, Amsterdam, Dublin, or Luxembourg — this i
 
 ---
 
-## Planned sandbox architecture
+## Local sandbox architecture
 
-When [`lab/`](lab/) is implemented, it will provide a 60-second-cold-start environment:
+The [`lab/`](lab/) directory provides a lightweight local environment:
 
 ```
 ┌─────────────────────────────────────────────┐
 │  Host machine                               │
 │  ┌──────────────────────────────────────┐   │
-│  │  Jupyter Lab (Python 3.13)           │   │
+│  │  JupyterLab (Python 3.11)            │   │
 │  │  PyIceberg · DuckDB · PyArrow        │   │
 │  └─────────────┬────────────────────────┘   │
 │                │                            │
@@ -178,9 +194,9 @@ When [`lab/`](lab/) is implemented, it will provide a 60-second-cold-start envir
 └─────────────────────────────────────────────┘
 ```
 
-**Design goals:** cold start < 60s · full reset < 10s · no JVM · zero networked-environment configuration.
+**Design goals:** fast warm start · full reset < 10s after images are built · no JVM · localhost-only ports.
 
-**Explicit non-goals:** Spark, Hive Metastore, Nessie, Kubernetes, Trino in the sandbox, or any production-oriented setup. Those belong in production deployments, not learning sandboxes.
+**Security note:** Jupyter runs without a token/password for local frictionless learning. Ports are bound to `127.0.0.1` only. Do not expose this compose setup on a networked host.
 
 Full specification: [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md).
 
