@@ -1,6 +1,6 @@
 # Experiment 01 — Your First Iceberg Table
 
-> **Time:** 60–90 min · **Tier:** Foundation · **Prerequisites:** `lab/` running, `00_setup_check` passed
+> **Time:** 60–90 min · **Tier:** Foundation · **Prerequisites:** `iceberg-lab` running, `00_setup_check` passed
 
 ---
 
@@ -25,7 +25,7 @@ An Iceberg table is **not** "a folder full of Parquet files." It's a **tree of m
 ### Step 1 — Wake up the lab
 
 ```bash
-cd lab
+cd iceberg-lab
 ./init.sh
 # open http://localhost:8888
 ```

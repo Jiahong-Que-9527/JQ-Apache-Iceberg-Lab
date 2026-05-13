@@ -139,7 +139,7 @@ for namespace, table_name in tables:
 If you want to see a "real" production-style catalog, run a quick Polaris or Lakekeeper container alongside MinIO. This is optional and adds 30 minutes. The PyIceberg API to use it:
 
 ```python
-# Pseudo-code — see `lab/` for an optional docker-compose.rest.yml
+# Pseudo-code — see the iceberg-lab repo for an optional docker-compose.rest.yml
 from pyiceberg.catalog.rest import RestCatalog
 
 rest_catalog = RestCatalog(

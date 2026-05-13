@@ -2,7 +2,7 @@
 
 > A hands-on experiment series that takes you from "never heard of Iceberg" to "ready to defend Iceberg architecture decisions in a senior data engineer interview."
 >
-> Built on top of the [iceberg-lab](../lab/) sandbox — a 60-second-startup local environment using PyIceberg + DuckDB + MinIO. See the [build spec](../docs/iceberg-lab-spec.md) for the planned layout.
+> Built on top of the [iceberg-lab](../) sandbox — a 60-second-startup local environment using PyIceberg + DuckDB + MinIO.
 
 ---
 
@@ -134,11 +134,17 @@ Experiments with regulatory angle: **02, 05, 09, 10, 12.**
 
 ---
 
-## Contributing
+## Contributor Policy
 
-Found a bug? Have a better explanation? Want to add an experiment? PRs welcome.
+This series belongs to a single-author repository. The only allowed Git contributor is:
 
-**Style guide for contributions:**
+```text
+Jiahong Que <jiahongque25@gmail.com>
+```
+
+Feedback and corrections are welcome through GitHub issues, but commits must remain authored only by Jiahong Que. Code agents must follow [`../AGENTS.md`](../AGENTS.md) and verify contributor identity before committing or pushing.
+
+**Style guide for experiment changes:**
 - Every experiment must answer at least one interview question explicitly
 - Every experiment must have a "Break it" section
 - Theory comes AFTER hands-on, never before
@@ -154,6 +160,6 @@ MIT for code. CC-BY-SA 4.0 for the written content.
 
 ## About the author
 
-Built by [Jiahong](#) — PhD candidate in deep learning for aviation, builder of [SoloLakehouse](#), focused on the intersection of modern data platforms and EU financial regulation.
+Built by [Jiahong Que](#) — PhD candidate in deep learning for aviation, builder of [SoloLakehouse](#), focused on the intersection of modern data platforms and EU financial regulation.
 
 If you're hiring for platform / data engineering roles in Frankfurt or remote-EU, [let's talk](#).

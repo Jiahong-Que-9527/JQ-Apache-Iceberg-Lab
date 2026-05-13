@@ -43,6 +43,8 @@ This is a **learning sandbox**, not a production deployment guide. For canonical
 | [`experiments/`](experiments/) | Twelve guided experiments, ~4,200 lines total | ✅ Available |
 | [`experiments/README.md`](experiments/README.md) | Series index with all 30 interview questions | ✅ Available |
 | [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build spec for the local sandbox | ✅ Available |
+| [`docs/contributor-policy.md`](docs/contributor-policy.md) | Single-author contributor policy for humans and agents | ✅ Required |
+| [`AGENTS.md`](AGENTS.md) | Mandatory instructions for code agents working in this repo | ✅ Required |
 | [`lab/`](lab/) | Docker Compose + notebooks + helpers | 🚧 In progress |
 
 **The experiments are usable today.** You can run them against any Iceberg environment — the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), an existing setup at your company, or the planned sandbox under [`lab/`](lab/) once it lands.
@@ -184,18 +186,21 @@ Full specification: [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md).
 
 ---
 
-## Contributing
+## Contributor Policy
 
-Issues and pull requests are welcome, especially:
+This is a single-author project. The only allowed Git contributor is:
 
-- **Corrections** to anything technically wrong
-- **Additional Break-it scenarios** that expose interesting failure modes
-- **Translations** of experiments into other languages
-- **Regulatory mappings** for jurisdictions outside the EU (US SEC, UK FCA, MAS, etc.)
+```text
+Jiahong Que <jiahongque25@gmail.com>
+```
 
-Style guide for contributions:
+All code agents must read and obey [`AGENTS.md`](AGENTS.md) before making changes. Before every commit or push, agents must verify that `git shortlog -sne --all` contains no contributor other than Jiahong Que.
 
-- Every experiment must tie to at least one explicit interview question
+Feedback, corrections, and suggestions are welcome through GitHub issues, but commits in this repository must remain authored only by Jiahong Que. See [`docs/contributor-policy.md`](docs/contributor-policy.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+Experiment style guide:
+
+- Every experiment must tie to at least one explicit interview question.
 - Every experiment must include a **Break it** section
 - Hands-on work comes **before** theory, not after
 - Keep the sandbox JVM-free unless there's a strong, documented reason to change that constraint
@@ -213,7 +218,7 @@ You are free to use this material for personal learning, team training, internal
 
 ## About the author
 
-Built by **Jiahong** — PhD candidate in deep learning applied to aviation operations, builder of [SoloLakehouse](https://github.com/) (a self-hosted, compliance-first lakehouse for EU FinTech), based in Frankfurt am Main.
+Built by **Jiahong Que** — PhD candidate in deep learning applied to aviation operations, builder of [SoloLakehouse](https://github.com/) (a self-hosted, compliance-first lakehouse for EU FinTech), based in Frankfurt am Main.
 
 I write at the intersection of modern data platforms, EU financial regulation, and platform engineering. If this material helped you, the most useful things you can do are:
 

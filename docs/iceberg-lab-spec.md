@@ -1,7 +1,7 @@
 # Iceberg Lab — Build Spec
 
 **Audience:** Code agent (implementer)
-**Author:** Jiahong (architect)
+**Author:** Jiahong Que
 **Status:** Ready for execution
 **Estimated implementation time:** 30–45 min
 
@@ -65,7 +65,7 @@ The user already runs a production-style lakehouse (SLH) with Trino + Iceberg + 
 ## 2. Directory Layout
 
 ```
-lab/
+iceberg-lab/
 ├── docker-compose.yml
 ├── .env.example
 ├── .gitignore
@@ -293,7 +293,7 @@ Do **not** build the notebooks first. Order matters:
 
 ## 5. Acceptance Criteria
 
-The user (Jiahong) should be able to:
+Jiahong should be able to:
 
 - [ ] Clone the repo on a fresh machine and run `./init.sh` successfully
 - [ ] Open `00_setup_check.ipynb` and have every cell execute green
@@ -328,7 +328,7 @@ The user (Jiahong) should be able to:
 
 When done, the agent should:
 1. Print a summary of files created
-2. Print the exact commands the user runs next (`cd lab && ./init.sh`)
+2. Print the exact commands the user runs next (`cd iceberg-lab && ./init.sh`)
 3. Print 3 interview-style questions the user should attempt to answer **before** opening notebook 02 — to anchor learning to outcomes, not consumption
 
 ---
