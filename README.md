@@ -1,78 +1,171 @@
 # JQ Apache Iceberg Lab
 
-Hands-on Apache Iceberg learning for data engineers who want interview-ready depth, not copy-paste tutorials. This repository pairs a lightweight local sandbox (PyIceberg, DuckDB, MinIO) with a twelve-part experiment series built around real interview questions, optional EU FinTech regulatory angles, and deliberate "break it" exercises.
+> Twelve hands-on experiments that take you from "never touched Iceberg" to "can defend Iceberg architecture in a senior data engineer interview" — built around **real interview questions**, with a deliberate **"Break it"** section in every experiment, and an optional **EU regulatory track** (DORA, BaFin/BAIT, MiFID II, GDPR) you won't find in any other Iceberg tutorial.
 
-## What is in this repo
+[![License: MIT](https://img.shields.io/badge/Code-MIT-blue.svg)](LICENSE)
+[![Content: CC BY-SA 4.0](https://img.shields.io/badge/Content-CC--BY--SA--4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
+[![Status: WIP](https://img.shields.io/badge/Status-Active%20Development-yellow.svg)](#)
+[![Made for](https://img.shields.io/badge/Made%20for-Interview%20Prep-orange.svg)](#)
 
-| Path | Purpose |
-| --- | --- |
-| [`experiments/`](experiments/) | Twelve guided experiments from first table to regulated-data architecture |
-| [`experiments/README.md`](experiments/README.md) | Series index, learning loop, and the 30 interview questions the track covers |
-| [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build specification for the local sandbox under `lab/` |
-| [`lab/`](lab/) | Planned home for Docker Compose, notebooks, and helper code (see spec) |
+**⭐ If this saves you time, please star the repo — it helps others find the material.**
 
-The experiment write-ups are usable today. The runnable sandbox is specified in [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) and will land under `lab/` as implementation proceeds.
+---
+
+## Why this exists
+
+Most Iceberg tutorials teach you **what commands to run**. They leave you able to follow a script but unable to answer "why does Iceberg's manifest list exist?" in an interview.
+
+This repo is different in three deliberate ways:
+
+1. **Interview-first.** Every experiment opens with a real question a hiring manager will ask. You write your current answer *before* the hands-on work, then again *after*. The delta is what you learned.
+2. **"Break it" methodology.** Every experiment has a section dedicated to deliberately breaking something — deleting metadata files, racing concurrent writers, partitioning by high-cardinality keys. Failure modes are where real understanding lives.
+3. **EU regulatory track.** Five experiments include optional sections mapping Iceberg's mechanics to DORA Article 28, MiFID II RTS 25, BaFin BAIT, and GDPR Article 17. If you're targeting roles in EU finance (Frankfurt, Amsterdam, Dublin, Luxembourg), this is differentiation you won't find anywhere else.
+
+If those three things match what you need, read on.
+
+---
 
 ## Who this is for
 
-- Data engineers preparing for lakehouse architecture interviews
-- Engineers moving from Hive or legacy warehouses to open table formats
-- EU FinTech teams who need Iceberg fluency with DORA, BaFin/BAIT, or MiFID II context
+- **Data engineers preparing for lakehouse interviews** at companies using Iceberg (Netflix, Apple, Adobe, AWS, Snowflake, Databricks customers, and increasingly EU banks)
+- **Engineers migrating from Hive or legacy warehouses** to modern open table formats
+- **EU FinTech teams** needing Iceberg fluency with regulatory context built in
+- **Anyone who has read the Iceberg docs and still doesn't feel ready** to defend architectural choices
 
-This is a learning sandbox, not a production deployment guide. For official Iceberg behavior and APIs, use the [Apache Iceberg documentation](https://iceberg.apache.org/docs/).
+This is a **learning sandbox**, not a production deployment guide. For canonical behavior and APIs, see the [Apache Iceberg documentation](https://iceberg.apache.org/docs/).
+
+---
+
+## What's in this repo
+
+| Path | Purpose | Status |
+| --- | --- | --- |
+| [`experiments/`](experiments/) | Twelve guided experiments, ~4,200 lines total | ✅ Available |
+| [`experiments/README.md`](experiments/README.md) | Series index with all 30 interview questions | ✅ Available |
+| [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build spec for the local sandbox | ✅ Available |
+| [`lab/`](lab/) | Docker Compose + notebooks + helpers | 🚧 In progress |
+
+**The experiments are usable today.** You can run them against any Iceberg environment — the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), an existing setup at your company, or the planned sandbox under [`lab/`](lab/) once it lands.
+
+---
+
+## Time investment
+
+| Path | Duration | Outcome |
+| --- | --- | --- |
+| **Crunch path** (experiments 01, 02, 04, 05, 07, 09) | ~1 week part-time | Bar for mid-level Iceberg interviews |
+| **Full Foundation + Mechanics** (01–08) | ~2 weeks part-time | Bar for senior generalist roles |
+| **Full series including specialization** (01–12) | ~3 weeks part-time | Bar for senior platform roles, with EU FinTech differentiation |
+
+Each experiment runs 60–120 minutes. The interview FAQ you build alongside is reusable indefinitely.
+
+---
+
+## The interview questions this prepares you for
+
+A sample of the 30 questions covered. The [full list lives in the series index](experiments/README.md).
+
+**Foundation**
+- What does an Iceberg table physically consist of on disk?
+- What's the difference between data files, manifests, manifest list, and metadata file?
+- Can you read an Iceberg table without Spark? How?
+
+**Mechanics**
+- How does Iceberg implement ACID transactions?
+- Why is Iceberg schema evolution safe when raw Parquet's isn't? What's a field-id?
+- Two writers commit at the same time. What happens?
+
+**Production**
+- How do you handle the small file problem?
+- What does `expire_snapshots` do? What are its risks?
+- Why would you choose Iceberg over Delta Lake?
+
+**Specialization (EU regulatory track)**
+- How does Iceberg help with regulatory compliance under DORA?
+- If a regulator asks "show me the exact state of this table on date X," how does Iceberg help?
+- How would you implement GDPR right-to-be-forgotten on an Iceberg table?
+
+If you can answer all 30 without notes, you are interview-ready for any senior data engineer role involving lakehouse architecture.
+
+---
 
 ## Quick start
 
-### Experiments (available now)
+### 1. Pick your environment
 
-1. Open the series index: [`experiments/README.md`](experiments/README.md)
-2. Start with [Experiment 01 — Your first Iceberg table](experiments/01-first-table.md)
-3. Keep a personal `interview-faq.md` and answer each experiment's interview question before and after the hands-on work
+Any of these works:
 
-**Crunch path (about one week):** experiments 01, 02, 04, 05, 07, and 09.
+- **The planned local sandbox** under [`lab/`](lab/) — lightest weight, JVM-free (PyIceberg + DuckDB + MinIO). See [build spec](docs/iceberg-lab-spec.md).
+- **The official Iceberg docker-compose** — Spark-based, broader feature coverage. See [Iceberg quickstart](https://iceberg.apache.org/spark-quickstart/).
+- **Your company's existing Iceberg setup** — most experiments work against any Iceberg-compliant environment.
 
-### Local lab (planned)
+### 2. Open the series index
 
-Target experience once `lab/` is implemented:
+→ [`experiments/README.md`](experiments/README.md)
 
-```bash
-git clone https://github.com/<your-org>/JQ-Apache-Iceberg-Lab.git
-cd JQ-Apache-Iceberg-Lab/lab
-./init.sh
-# open http://localhost:8888 and run notebooks/00_setup_check.ipynb
-```
+### 3. Set up your personal interview FAQ
 
-Design goals from the spec: cold start under 60 seconds, full reset under 10 seconds, no Spark or Hive Metastore, and maximum time spent on Iceberg metadata rather than JVM or cluster setup.
+Create a local file called `interview-faq.md`. For each experiment, write your answer to the interview question **before** doing the hands-on work, and again **after**. This testing-effect loop is what makes the series stick.
+
+### 4. Start with Experiment 01
+
+→ [`experiments/01-first-table.md`](experiments/01-first-table.md)
+
+---
 
 ## How the experiments are structured
 
-Each experiment follows the same loop:
+Every experiment follows the same loop:
 
-1. Read the interview question at the top and write your answer first
-2. Run the hands-on section in the lab (typing commands, not only pasting)
-3. Complete the **Break it** section
-4. Read the theory deep-dive with concrete behavior in mind
-5. Re-answer the interview question and compare to your first draft
+1. 🎯 Read the **interview question** and write your current answer
+2. 🛠️ Do the **hands-on** section (type, don't paste — your fingers learn what your eyes skip)
+3. 💥 Do the **Break it** section
+4. 📚 Read the **theory deep-dive** with concrete behavior in mind
+5. ✍️ **Re-answer** the interview question and compare to your draft
+6. 🎁 (Optional) Adapt the included **LinkedIn post draft** to publish what you learned
 
-Tiers:
+### Tier structure
 
-- **Foundation (01–04):** physical layout, metadata, catalogs, non-Spark reads
-- **Mechanics (05–08):** snapshots, schema evolution, partitioning, concurrency
-- **Production (09–11):** small files, expiration/GC, format comparison
-- **Specialization (12):** regulated data and auditability
+| Tier | Experiments | What you'll be able to do |
+| --- | --- | --- |
+| **Foundation** | 01–04 | Explain Iceberg's physical layout, query plan, and catalog model from memory |
+| **Mechanics** | 05–08 | Defend Iceberg's behavior under schema change, partition evolution, and concurrent writes |
+| **Production** | 09–11 | Operate Iceberg at scale: small files, GC, format selection |
+| **Specialization** | 12 | Defend Iceberg as a compliance architecture choice for EU regulated environments |
 
-Experiments 02, 05, 09, 10, and 12 include optional EU regulatory angles.
+Experiments **02, 05, 09, 10, and 12** include optional 🇪🇺 regulatory angle sections.
+
+---
+
+## EU regulatory track (the differentiator)
+
+Most Iceberg tutorials stop at technical mechanics. This series adds a layer that explicitly maps Iceberg's design to specific regulatory requirements relevant to EU financial services.
+
+| Regulation | Article / Section | Iceberg mechanism covered |
+| --- | --- | --- |
+| **DORA** | Art. 9 (integrity, traceability) | Snapshot summaries, manifest checksums (exp 02) |
+| **DORA** | Art. 28 (ICT third-party risk, portability) | Open spec, multi-engine reads (exp 02, 11) |
+| **MiFID II** | RTS 22 (transaction reporting fields) | Schema with documented field-ids + table property tagging (exp 12) |
+| **MiFID II** | RTS 25 (reproducibility) | End-of-day snapshot tagging + time travel (exp 05, 12) |
+| **BaFin BAIT** | Access controls | Catalog-level RBAC (exp 03) |
+| **GDPR** | Art. 17 (right to erasure) | Redaction workflow + retention policy (exp 10, 12) |
+
+If you're interviewing in Frankfurt, Amsterdam, Dublin, or Luxembourg — this is the layer that distinguishes you.
+
+---
 
 ## Planned sandbox architecture
+
+When [`lab/`](lab/) is implemented, it will provide a 60-second-cold-start environment:
 
 ```
 ┌─────────────────────────────────────────────┐
 │  Host machine                               │
 │  ┌──────────────────────────────────────┐   │
-│  │  Jupyter Lab (Python 3.11)           │   │
+│  │  Jupyter Lab (Python 3.13)           │   │
 │  │  PyIceberg · DuckDB · PyArrow        │   │
 │  └─────────────┬────────────────────────┘   │
-│                │                             │
+│                │                            │
 │  ┌─────────────┴──────────┐                 │
 │  │  catalog.db (SQLite)   │                 │
 │  └─────────────┬──────────┘                 │
@@ -83,26 +176,53 @@ Experiments 02, 05, 09, 10, and 12 include optional EU regulatory angles.
 └─────────────────────────────────────────────┘
 ```
 
-Explicit non-goals: Spark, Nessie, Kubernetes, Trino in the sandbox, and any configuration meant for networked or production use.
+**Design goals:** cold start < 60s · full reset < 10s · no JVM · zero networked-environment configuration.
+
+**Explicit non-goals:** Spark, Hive Metastore, Nessie, Kubernetes, Trino in the sandbox, or any production-oriented setup. Those belong in production deployments, not learning sandboxes.
+
+Full specification: [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md).
+
+---
 
 ## Contributing
 
-Issues and pull requests are welcome.
+Issues and pull requests are welcome, especially:
 
-When adding or editing experiments:
+- **Corrections** to anything technically wrong
+- **Additional Break-it scenarios** that expose interesting failure modes
+- **Translations** of experiments into other languages
+- **Regulatory mappings** for jurisdictions outside the EU (US SEC, UK FCA, MAS, etc.)
 
-- Tie each experiment to at least one explicit interview question
-- Include a **Break it** section
-- Put hands-on work before theory
-- Keep the sandbox JVM-free unless there is a strong, documented reason to change that constraint
+Style guide for contributions:
+
+- Every experiment must tie to at least one explicit interview question
+- Every experiment must include a **Break it** section
+- Hands-on work comes **before** theory, not after
+- Keep the sandbox JVM-free unless there's a strong, documented reason to change that constraint
+
+---
 
 ## License
 
 - Code in `lab/` (when added): [MIT](LICENSE)
-- Written tutorials and specs under `experiments/` and `docs/`: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- Tutorials and specs under `experiments/` and `docs/`: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 
-## Author
+You are free to use this material for personal learning, team training, internal workshops, or as the basis for derivative tutorials — provided you give attribution and share derivatives under the same license.
 
-Built by Bill (Jiahong) — research in deep learning for aviation, builder of SoloLakehouse, focused on modern data platforms and EU financial regulation.
+---
 
-If this helped you prepare for interviews or ship a lakehouse design, a star or a short issue with what worked (or what confused you) helps others find the material.
+## About the author
+
+Built by **Jiahong** — PhD candidate in deep learning applied to aviation operations, builder of [SoloLakehouse](https://github.com/) (a self-hosted, compliance-first lakehouse for EU FinTech), based in Frankfurt am Main.
+
+I write at the intersection of modern data platforms, EU financial regulation, and platform engineering. If this material helped you, the most useful things you can do are:
+
+- ⭐ **Star the repo** so others can find it
+- 💬 **Open an issue** with what worked or what confused you
+- 🤝 **Connect on [LinkedIn](https://www.linkedin.com/)** — I'm especially happy to talk with engineers and hiring managers at Frankfurt-area FinTechs, EU banks, or anyone building compliance-aware data platforms
+
+If you're hiring for platform engineering or senior data engineering roles in Frankfurt or remote-EU, [I'd love to hear from you](https://www.linkedin.com/).
+
+---
+
+*Last updated: May 2026 · Apache Iceberg version targeted: 1.5+ / spec v2*
