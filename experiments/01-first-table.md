@@ -25,7 +25,7 @@ An Iceberg table is **not** "a folder full of Parquet files." It's a **tree of m
 ### Step 1 — Wake up the lab
 
 ```bash
-cd iceberg-lab
+cd lab
 ./init.sh
 # open http://localhost:8888
 ```

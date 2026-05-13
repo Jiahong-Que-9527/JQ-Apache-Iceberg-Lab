@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/Code-MIT-blue.svg)](LICENSE)
 [![Content: CC BY-SA 4.0](https://img.shields.io/badge/Content-CC--BY--SA--4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
-[![Status: WIP](https://img.shields.io/badge/Status-Active%20Development-yellow.svg)](#)
+[![Status: Runnable Lab](https://img.shields.io/badge/Status-Runnable%20Lab-brightgreen.svg)](#)
 [![Made for](https://img.shields.io/badge/Made%20for-Interview%20Prep-orange.svg)](#)
 
 **⭐ If this saves you time, please star the repo — it helps others find the material.**
@@ -43,8 +43,6 @@ This is a **learning sandbox**, not a production deployment guide. For canonical
 | [`experiments/`](experiments/) | Twelve guided experiments, ~4,200 lines total | ✅ Available |
 | [`experiments/README.md`](experiments/README.md) | Series index with all 30 interview questions | ✅ Available |
 | [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build spec for the local sandbox | ✅ Available |
-| [`docs/contributor-policy.md`](docs/contributor-policy.md) | Single-author contributor policy for humans and agents | ✅ Required |
-| [`AGENTS.md`](AGENTS.md) | Mandatory instructions for code agents working in this repo | ✅ Required |
 | [`lab/`](lab/) | Docker Compose + Jupyter notebooks + PyIceberg helpers | ✅ Runnable |
 
 **The experiments are usable today.** You can run them against the local sandbox under [`lab/`](lab/), the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), or an existing Iceberg setup at your company.
@@ -225,7 +223,7 @@ Experiment style guide:
 
 ## License
 
-- Code in `lab/` (when added): [MIT](LICENSE)
+- Code in `lab/`: [MIT](LICENSE)
 - Tutorials and specs under `experiments/` and `docs/`: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 
 You are free to use this material for personal learning, team training, internal workshops, or as the basis for derivative tutorials — provided you give attribution and share derivatives under the same license.
