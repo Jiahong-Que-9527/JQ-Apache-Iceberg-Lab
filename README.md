@@ -43,6 +43,7 @@ This is a **learning sandbox**, not a production deployment guide. For canonical
 | [`experiments/`](experiments/) | Twelve guided experiments, ~4,200 lines total | ✅ Available |
 | [`experiments/README.md`](experiments/README.md) | Series index with all 30 interview questions | ✅ Available |
 | [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build spec for the local sandbox | ✅ Available |
+| [`docs/operation-guide.md`](docs/operation-guide.md) | Full clone-to-shutdown operating guide | ✅ Available |
 | [`lab/`](lab/) | Docker Compose + Jupyter notebooks + PyIceberg helpers | ✅ Runnable |
 
 **The experiments are usable today.** You can run them against the local sandbox under [`lab/`](lab/), the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), or an existing Iceberg setup at your company.
@@ -90,6 +91,8 @@ If you can answer all 30 without notes, you are interview-ready for any senior d
 ---
 
 ## Quick start
+
+For the complete workflow from clone to shutdown, see [`docs/operation-guide.md`](docs/operation-guide.md).
 
 ### 1. Start the local lab
 
