@@ -328,7 +328,7 @@ The user (Bill) should be able to:
 
 When done, the agent should:
 1. Print a summary of files created
-2. Print the exact commands the user runs next (`cd iceberg-lab && ./init.sh`)
+2. Print the exact commands the user runs next (`cd lab && ./init.sh`)
 3. Print 3 interview-style questions the user should attempt to answer **before** opening notebook 02 — to anchor learning to outcomes, not consumption
 
 ---
