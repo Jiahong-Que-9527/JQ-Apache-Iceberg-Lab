@@ -7,6 +7,10 @@
 [![Status: Runnable Lab](https://img.shields.io/badge/Status-Runnable%20Lab-brightgreen.svg)](#)
 [![Made for](https://img.shields.io/badge/Made%20for-Interview%20Prep-orange.svg)](#)
 
+<p align="center">
+  <img src="docs/assets/JQ-Apache-Iceberg-Lab.jpg" alt="JQ Apache Iceberg Lab theme image" width="520">
+</p>
+
 **⭐ If this saves you time, please star the repo — it helps others find the material.**
 
 ---
