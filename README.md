@@ -13,24 +13,18 @@
 
 ## Why this exists
 
-Most Iceberg tutorials teach you **what commands to run**. They leave you able to follow a script but unable to answer "why does Iceberg's manifest list exist?" in an interview.
+Most Iceberg tutorials show commands. This one is built to help you explain the architecture in a senior data-engineering interview.
 
-This repo is different in three deliberate ways:
-
-1. **Interview-first.** Every experiment opens with a real question a hiring manager will ask. You write your current answer *before* the hands-on work, then again *after*. The delta is what you learned.
-2. **"Break it" methodology.** Every experiment has a section dedicated to deliberately breaking something — deleting metadata files, racing concurrent writers, partitioning by high-cardinality keys. Failure modes are where real understanding lives.
-3. **EU regulatory track.** Five experiments include optional sections mapping Iceberg's mechanics to DORA Article 28, MiFID II RTS 25, BaFin BAIT, and GDPR Article 17. If you're targeting roles in EU finance (Frankfurt, Amsterdam, Dublin, Luxembourg), this is differentiation you won't find anywhere else.
-
-If those three things match what you need, read on.
+Every experiment starts with an interview question, walks through hands-on work, then asks you to deliberately break something. Several experiments also add an optional EU finance angle: DORA, BaFin/BAIT, MiFID II, and GDPR.
 
 ---
 
 ## Who this is for
 
-- **Data engineers preparing for lakehouse interviews** at companies using Iceberg (Netflix, Apple, Adobe, AWS, Snowflake, Databricks customers, and increasingly EU banks)
-- **Engineers migrating from Hive or legacy warehouses** to modern open table formats
-- **EU FinTech teams** needing Iceberg fluency with regulatory context built in
-- **Anyone who has read the Iceberg docs and still doesn't feel ready** to defend architectural choices
+- **Data engineers** preparing for lakehouse or Iceberg interviews
+- **Engineers** moving from Hive or legacy warehouses to open table formats
+- **EU FinTech teams** who need regulatory context alongside table-format mechanics
+- **Readers of the Iceberg docs** who still want hands-on confidence
 
 This is a **learning sandbox**, not a production deployment guide. For canonical behavior and APIs, see the [Apache Iceberg documentation](https://iceberg.apache.org/docs/).
 
@@ -40,13 +34,13 @@ This is a **learning sandbox**, not a production deployment guide. For canonical
 
 | Path | Purpose | Status |
 | --- | --- | --- |
-| [`experiments/`](experiments/) | Twelve guided experiments, ~4,200 lines total | ✅ Available |
-| [`experiments/README.md`](experiments/README.md) | Series index with all 30 interview questions | ✅ Available |
+| [`experiments/`](experiments/) | Twelve guided experiments | ✅ Available |
+| [`experiments/README.md`](experiments/README.md) | Series index and interview questions | ✅ Available |
 | [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build spec for the local sandbox | ✅ Available |
-| [`docs/operation-guide.md`](docs/operation-guide.md) | Step-by-step runbook: prerequisites, clone, start/stop the lab, first notebooks, experiment loop, reset, cleanup, and troubleshooting | ✅ Available |
+| [`docs/operation-guide.md`](docs/operation-guide.md) | Step-by-step runbook for setup, reset, cleanup, and troubleshooting | ✅ Available |
 | [`lab/`](lab/) | Docker Compose + Jupyter notebooks + PyIceberg helpers | ✅ Runnable |
 
-**The experiments are usable today.** You can run them against the local sandbox under [`lab/`](lab/), the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), or an existing Iceberg setup at your company.
+The experiments run against the local sandbox under [`lab/`](lab/), the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), or an existing Iceberg setup.
 
 ---
 
@@ -58,35 +52,15 @@ This is a **learning sandbox**, not a production deployment guide. For canonical
 | **Full Foundation + Mechanics** (01–08) | ~2 weeks part-time | Bar for senior generalist roles |
 | **Full series including specialization** (01–12) | ~3 weeks part-time | Bar for senior platform roles, with EU FinTech differentiation |
 
-Each experiment runs 60–120 minutes. The interview FAQ you build alongside is reusable indefinitely.
+Each experiment runs 60-120 minutes.
 
 ---
 
 ## The interview questions this prepares you for
 
-A sample of the 30 questions covered. The [full list lives in the series index](experiments/README.md).
+The series covers 30 questions across physical layout, manifests, catalogs, transactions, schema evolution, partition evolution, concurrent writers, small files, snapshot expiry, format tradeoffs, and EU regulatory use cases.
 
-**Foundation**
-- What does an Iceberg table physically consist of on disk?
-- What's the difference between data files, manifests, manifest list, and metadata file?
-- Can you read an Iceberg table without Spark? How?
-
-**Mechanics**
-- How does Iceberg implement ACID transactions?
-- Why is Iceberg schema evolution safe when raw Parquet's isn't? What's a field-id?
-- Two writers commit at the same time. What happens?
-
-**Production**
-- How do you handle the small file problem?
-- What does `expire_snapshots` do? What are its risks?
-- Why would you choose Iceberg over Delta Lake?
-
-**Specialization (EU regulatory track)**
-- How does Iceberg help with regulatory compliance under DORA?
-- If a regulator asks "show me the exact state of this table on date X," how does Iceberg help?
-- How would you implement GDPR right-to-be-forgotten on an Iceberg table?
-
-If you can answer all 30 without notes, you are interview-ready for any senior data engineer role involving lakehouse architecture.
+See the [full question list](experiments/README.md).
 
 ---
 
@@ -158,7 +132,7 @@ Experiments **02, 05, 09, 10, and 12** include optional 🇪🇺 regulatory angl
 
 ## EU regulatory track (the differentiator)
 
-Most Iceberg tutorials stop at technical mechanics. This series adds a layer that explicitly maps Iceberg's design to specific regulatory requirements relevant to EU financial services.
+Optional regulatory sections appear in experiments **02, 05, 09, 10, and 12**. They connect Iceberg mechanics to common EU finance interview topics:
 
 | Regulation | Article / Section | Iceberg mechanism covered |
 | --- | --- | --- |
@@ -169,7 +143,7 @@ Most Iceberg tutorials stop at technical mechanics. This series adds a layer tha
 | **BaFin BAIT** | Access controls | Catalog-level RBAC (exp 03) |
 | **GDPR** | Art. 17 (right to erasure) | Redaction workflow + retention policy (exp 10, 12) |
 
-If you're interviewing in Frankfurt, Amsterdam, Dublin, or Luxembourg — this is the layer that distinguishes you.
+Use this track if you are targeting EU FinTech, banking, or regulated-data roles.
 
 ---
 
@@ -202,27 +176,6 @@ The [`lab/`](lab/) directory provides a lightweight local environment:
 For day-to-day operations — stopping containers, full cleanup, and troubleshooting — see [`docs/operation-guide.md`](docs/operation-guide.md).
 
 Full specification: [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md).
-
----
-
-## Contributor Policy
-
-This is a single-author project. The only allowed Git contributor is:
-
-```text
-Jiahong Que <jiahongque25@gmail.com>
-```
-
-All code agents must read and obey [`AGENTS.md`](AGENTS.md) before making changes. Before every commit or push, agents must verify that `git shortlog -sne --all` contains no contributor other than Jiahong Que.
-
-Feedback, corrections, and suggestions are welcome through GitHub issues, but commits in this repository must remain authored only by Jiahong Que. See [`docs/contributor-policy.md`](docs/contributor-policy.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
-
-Experiment style guide:
-
-- Every experiment must tie to at least one explicit interview question.
-- Every experiment must include a **Break it** section
-- Hands-on work comes **before** theory, not after
-- Keep the sandbox JVM-free unless there's a strong, documented reason to change that constraint
 
 ---
 
