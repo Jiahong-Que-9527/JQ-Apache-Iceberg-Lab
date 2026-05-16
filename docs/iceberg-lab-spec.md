@@ -31,10 +31,11 @@ Repository root
     │   ├── PyArrow / pandas
     │   └── fastavro for Iceberg manifest inspection
     ├── catalog.db      # SQLite Iceberg catalog, gitignored
-    └── warehouse/      # MinIO object data, gitignored
+    ├── warehouse-minio/    # MinIO object data, gitignored
+    └── warehouse-seaweed/  # SeaweedFS object data, gitignored
 
-MinIO container
-└── bucket: warehouse
+MinIO container ──► bucket: warehouse
+SeaweedFS container (S3 :8333) ──► bucket: warehouse
 ```
 
 **Why these choices:**
@@ -43,11 +44,15 @@ MinIO container
 | --- | --- | --- |
 | Compute | PyIceberg + DuckDB | No JVM. Starts quickly. Lets the user inspect raw Iceberg metadata directly. |
 | Catalog | SQLite via PyIceberg `SqlCatalog` | Single file, zero ops, visible with `sqlite3 catalog.db`. |
-| Storage | MinIO single container | Local S3-compatible object store that mirrors the user's production abstraction. |
+| Storage | MinIO + SeaweedFS (parallel) | MinIO is the default for experiments 01–12. SeaweedFS is added for Experiment 13 only — S3 semantics and Iceberg ops comparison without Spark or extra catalogs. |
 | Notebook | JupyterLab in Docker | Reproducible Python environment across machines. |
 | Manifest reader | `fastavro` | Iceberg manifest lists and manifests are Avro files, not Parquet files. |
 
 Explicitly rejected: Spark, Hive Metastore, Nessie, Kubernetes, Trino, AWS S3.
+
+### Why SeaweedFS is in the lab
+
+Experiment 13 compares two S3-compatible on-prem options. SeaweedFS is **not** required for Iceberg fundamentals (01–12). It exists so learners can measure the same commit/LIST workload on two backends and defend storage choices in interviews.
 
 ---
 
@@ -80,12 +85,17 @@ JQ-Apache-Iceberg-Lab/
     │   ├── 04_time_travel.ipynb
     │   ├── 05_partitioning.ipynb
     │   ├── 06_compaction.ipynb
-    │   └── 07_iceberg_vs_delta.ipynb
+    │   ├── 07_iceberg_vs_delta.ipynb
+    │   └── 08_storage_backends.ipynb
+    ├── seaweedfs/
+    │   └── s3-config.json
+    ├── scripts/
+    │   └── ensure_bucket.py
     └── src/
         └── catalog_helper.py
 ```
 
-Runtime state must never be committed: `lab/catalog.db`, `lab/catalog.db-journal`, `lab/warehouse/`, `lab/.env`, notebook checkpoints, caches, and local interview notes.
+Runtime state must never be committed: `lab/catalog.db`, `lab/catalog.db-journal`, `lab/catalog_seaweed.db`, `lab/catalog_seaweed.db-journal`, `lab/warehouse/`, `lab/warehouse-minio/`, `lab/warehouse-seaweed/`, `lab/.env`, notebook checkpoints, caches, and local interview notes.
 
 ---
 
@@ -107,8 +117,9 @@ Do not install Python dependencies on every Jupyter startup. Building the image 
 
 Requirements:
 
-- Services: `minio`, `bucket-init`, and `jupyter`.
-- MinIO exposes S3 API `9000` and console `9001`.
+- Services: `minio`, `bucket-init`, `seaweedfs`, `seaweed-bucket-init`, and `jupyter`.
+- MinIO exposes S3 API `9000` and console `9001`; data volume `warehouse-minio/`.
+- SeaweedFS exposes S3 API `8333` and master UI `9333`; data volume `warehouse-seaweed/`; S3 config in `seaweedfs/s3-config.json`.
 - Jupyter exposes `8888`.
 - All host port bindings must be localhost-only, for example `127.0.0.1:8888:8888`.
 - Jupyter token and password are disabled for zero-friction local use. Add an explicit warning comment: **DO NOT use this config in any networked environment.**
@@ -125,10 +136,16 @@ AWS_ACCESS_KEY_ID=minioadmin
 AWS_SECRET_ACCESS_KEY=minioadmin
 AWS_REGION=us-east-1
 S3_ENDPOINT=http://minio:9000
+S3_ENDPOINT_MINIO=http://minio:9000
 CATALOG_URI=sqlite:///catalog.db
+S3_ENDPOINT_SEAWEED=http://seaweedfs:8333
+SEAWEED_BUCKET=warehouse
+SEAWEED_ACCESS_KEY_ID=seaweedadmin
+SEAWEED_SECRET_ACCESS_KEY=seaweedadmin
+CATALOG_URI_SEAWEED=sqlite:///catalog_seaweed.db
 ```
 
-The `MINIO_*` values configure MinIO. The AWS-prefixed values configure PyIceberg, boto3, and DuckDB S3 access.
+The `MINIO_*` values configure MinIO. The AWS-prefixed values configure PyIceberg/boto3/DuckDB for **MinIO** (default). Seaweed-prefixed values configure the second backend for Experiment 13.
 
 ### 3.4 `lab/requirements.txt`
 
@@ -153,25 +170,20 @@ These versions are pinned because `boto3`, `s3fs`, `aiobotocore`, and `botocore`
 Idempotent startup:
 
 1. Copy `.env.example` to `.env` if needed.
-2. Create `warehouse/` if needed.
-3. Ensure `lab/`, `warehouse/`, `notebooks/`, and `src/` are writable by the Jupyter container user.
+2. Create `warehouse-minio/` and `warehouse-seaweed/` if needed.
+3. Ensure lab dirs are writable by the Jupyter container user.
 4. Build the Jupyter image.
-5. Start MinIO.
-6. Run `bucket-init` to create the bucket.
+5. Start MinIO and SeaweedFS.
+6. Run `bucket-init` and `seaweed-bucket-init`.
 7. Start Jupyter.
-8. Print:
-
-```text
-Open http://localhost:8888 and start with notebooks/00_setup_check.ipynb
-MinIO console: http://localhost:9001
-```
+8. Print Jupyter, MinIO console, and SeaweedFS UI URLs.
 
 ### 3.6 `lab/reset.sh`
 
 Require `--confirm`.
 
 1. `docker compose down --remove-orphans`
-2. `rm -rf warehouse catalog.db catalog.db-journal`
+2. `rm -rf warehouse-minio warehouse-seaweed warehouse catalog.db catalog.db-journal catalog_seaweed.db catalog_seaweed.db-journal`
 3. `bash init.sh`
 
 This should be under 10 seconds after images are already built.
@@ -180,19 +192,19 @@ This should be under 10 seconds after images are already built.
 
 Provide:
 
-- `get_catalog(name: str = "lab") -> SqlCatalog`
-- `ensure_namespace(catalog, namespace: str = "lab")`
-- `drop_table_if_exists(catalog, identifier: str)`
-- `get_s3_client()`
+- `get_catalog(backend: Literal["minio","seaweed"] = "minio", name: str | None = None) -> SqlCatalog`
+- `ensure_namespace`, `drop_table_if_exists`
+- `get_s3_client(backend=...)`, `list_object_keys(prefix, backend=...)`
+- `download_s3_uri`, `read_json_s3` with optional `backend`
 - `current_metadata_location(table) -> str`
-- `configure_duckdb_for_minio(con)`
+- `configure_duckdb_for_s3(con, backend=...)`, alias `configure_duckdb_for_minio`
+- `storage_console_url(backend)`
 
 Implementation notes:
 
-- Use `SqlCatalog.create_tables()` so the SQLite catalog tables are initialized automatically.
-- Use `s3.force-virtual-addressing = false` for MinIO path-style access.
-- Keep `CATALOG_URI=sqlite:///catalog.db` relative to `/home/jovyan/work`.
-- DuckDB S3 reads should use the metadata JSON path, not only the table root path.
+- MinIO uses `catalog.db`; Seaweed uses `catalog_seaweed.db`.
+- Default `get_catalog()` remains MinIO so experiments 01–12 are unchanged.
+- Use `s3.force-virtual-addressing = false` for path-style access on both backends.
 
 ---
 
@@ -252,6 +264,10 @@ Write many tiny files, inspect file metadata, and explain compaction. If PyIcebe
 
 Mostly markdown. Compare protocol, schema evolution, partitioning, catalog model, and ecosystem. End with a fill-in 90-second interview answer template.
 
+### `08_storage_backends.ipynb`
+
+Experiment 13 companion: health-check MinIO and SeaweedFS, mirror Iceberg tables on both, compare object counts, run a 200-commit small-file storm, output a metrics DataFrame.
+
 ---
 
 ## 5. README Requirements
@@ -276,7 +292,8 @@ It must document:
 ## 6. Acceptance Criteria
 
 - [ ] `cd lab && ./init.sh` succeeds on this machine.
-- [ ] `docker compose ps` shows MinIO healthy and Jupyter running.
+- [ ] `docker compose ps` shows MinIO and SeaweedFS healthy and Jupyter running.
+- [ ] `08_storage_backends.ipynb` runs on a clean lab (Experiment 13).
 - [ ] `00_setup_check.ipynb` can execute green.
 - [ ] `01_basics.ipynb` can create an Iceberg table and append data.
 - [ ] `02_metadata_anatomy.ipynb` can show the actual metadata JSON and Avro manifest chain.

@@ -351,6 +351,18 @@ The Git analogy goes viral every time someone rediscovers it. Be one of those pe
 
 ---
 
+## Session wrap-up (close the loop)
+
+1. Confirm hands-on is done: multiple snapshots listed, time travel read worked, old files still visible in MinIO. Optional notebook: `lab/notebooks/04_time_travel.ipynb`.
+2. Update `interview-faq.md` with your **after** answer to this experiment's interview question.
+3. If Break it left the lab in a broken state: `cd lab && ./reset.sh --confirm` — see [operation guide §7](../docs/operation-guide.md).
+4. **End of day** (pause until tomorrow, keep data): `cd lab && docker compose stop` — [operation guide §8](../docs/operation-guide.md).
+5. **Done with the lab on this machine** (remove all local tables and catalogs): [operation guide §10](../docs/operation-guide.md).
+
+Lab lifecycle overview: [operation guide §0](../docs/operation-guide.md).
+
+---
+
 ## Next up
 
 → [Experiment 06: Schema evolution](06-schema-evolution.md) — the field-id story. Why Iceberg can do what Parquet alone can't.

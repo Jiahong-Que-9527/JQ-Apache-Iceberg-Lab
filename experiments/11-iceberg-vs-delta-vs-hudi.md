@@ -204,6 +204,18 @@ The next experiment is **the** differentiator — the one that pushes you from s
 
 ---
 
+## Session wrap-up (close the loop)
+
+1. Confirm hands-on is done: comparison table / decision tree internalized, **after** re-answer written (90–120 s spoken). Optional notebook: `lab/notebooks/07_iceberg_vs_delta.ipynb`.
+2. Update `interview-faq.md` with your **after** answer to this experiment's interview question (and Tier 3 self-check questions 16–23 if not done yet).
+3. If you experimented with broken catalog/storage state elsewhere: `cd lab && ./reset.sh --confirm` — [operation guide §7](../docs/operation-guide.md).
+4. **End of day** (pause until tomorrow, keep data): `cd lab && docker compose stop` — [operation guide §8](../docs/operation-guide.md).
+5. **Done with the lab on this machine** (remove all local tables and catalogs): [operation guide §10](../docs/operation-guide.md).
+
+Lab lifecycle overview: [operation guide §0](../docs/operation-guide.md).
+
+---
+
 ## Next up
 
-→ [Experiment 12: Iceberg for Regulated Data](12-iceberg-for-regulated-data.md) — the EU FinTech specialty layer.
+→ [Experiment 13: MinIO vs SeaweedFS](13-minio-vs-seaweedfs.md) — object storage for Iceberg, then [Experiment 12: Iceberg for Regulated Data](12-iceberg-for-regulated-data.md).

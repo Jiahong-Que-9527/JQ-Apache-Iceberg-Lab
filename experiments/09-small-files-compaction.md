@@ -335,6 +335,18 @@ This kind of "operational war stories" post performs very well with senior data 
 
 ---
 
+## Session wrap-up (close the loop)
+
+1. Confirm hands-on is done: small-file storm measured, compaction (or rewrite strategy) applied, file count before/after recorded. Optional notebook: `lab/notebooks/06_compaction.ipynb`.
+2. Update `interview-faq.md` with your **after** answer to this experiment's interview question.
+3. If Break it left the lab in a broken state: `cd lab && ./reset.sh --confirm` — see [operation guide §7](../docs/operation-guide.md).
+4. **End of day** (pause until tomorrow, keep data): `cd lab && docker compose stop` — [operation guide §8](../docs/operation-guide.md).
+5. **Done with the lab on this machine** (remove all local tables and catalogs): [operation guide §10](../docs/operation-guide.md).
+
+Lab lifecycle overview: [operation guide §0](../docs/operation-guide.md).
+
+---
+
 ## Next up
 
 → [Experiment 10: Snapshot expiration & GC](10-expiration-gc.md) — the other side of file management. When and how to actually delete old data.

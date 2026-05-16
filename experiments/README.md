@@ -25,6 +25,8 @@ This series is different. Every experiment is built around **a question an inter
 
 ## How to use this series
 
+**Lab lifecycle (clone → run → shut down):** see [`docs/operation-guide.md`](../docs/operation-guide.md) §0. That guide covers `./init.sh`, the per-experiment loop below, `./reset.sh --confirm`, end-of-day `docker compose stop`, and full cleanup.
+
 **Recommended pace:** 1 experiment per evening (90–120 min each). Full series = ~3 weeks part-time.
 
 **For interview prep crunch (1 week):** Do experiments 01, 02, 04, 05, 07, 09. Skip the rest on first pass.
@@ -36,7 +38,8 @@ This series is different. Every experiment is built around **a question an inter
 3. **Do the "Break it" section.** This is where real understanding lives.
 4. **Read the "Theory deep-dive" section.** Now it actually means something because you have a memory of the behavior.
 5. **Re-answer the interview question.** Compare to your draft from step 1. The delta is what you learned.
-6. **(Optional but recommended)** Write a 200-word LinkedIn post about one insight. Public commitment compounds.
+6. **Follow the Session wrap-up** at the end of each experiment (reset, end-of-day stop, or full cleanup).
+7. **(Optional but recommended)** Write a 200-word LinkedIn post about one insight. Public commitment compounds.
 
 ---
 
@@ -72,6 +75,7 @@ For people who can be trusted with a production lakehouse.
 | 09 | [The small files problem](09-small-files-compaction.md) | "How do you handle the small file problem?" |
 | 10 | [Snapshot expiration & GC](10-expiration-gc.md) | "What are the risks of `expire_snapshots`?" |
 | 11 | [Iceberg vs Delta vs Hudi](11-iceberg-vs-delta-vs-hudi.md) | "Why would you choose Iceberg over Delta?" |
+| 13 | [MinIO vs SeaweedFS](13-minio-vs-seaweedfs.md) | "How do you choose object storage for Iceberg? What does Iceberg require from S3?" |
 
 ### Tier 4 — Specialization: "Can you defend architectural decisions?"
 The differentiation layer. Few candidates get here. This is where €70k offers become €100k+ offers.
@@ -84,7 +88,7 @@ The differentiation layer. Few candidates get here. This is where €70k offers 
 
 ## The 30 interview questions this series prepares you for
 
-A flat list. If you can answer all 30 without notes, you are interview-ready for any senior data engineer role that involves lakehouse architecture.
+A flat list. If you can answer all 33 without notes, you are interview-ready for any senior data engineer role that involves lakehouse architecture.
 
 **Foundation:**
 1. What does an Iceberg table physically consist of on disk?
@@ -114,6 +118,9 @@ A flat list. If you can answer all 30 without notes, you are interview-ready for
 21. How does Iceberg compare to Delta Lake on transaction protocol?
 22. How does Iceberg compare to Hudi on streaming workloads?
 23. When would you NOT choose Iceberg?
+31. How do you choose object storage (MinIO, SeaweedFS, S3) for an Iceberg lakehouse?
+32. What S3 API semantics does Iceberg depend on for commits and reads?
+33. Why does the small-file problem stress object storage LIST operations, not just query engines?
 
 **Specialization:**
 24. How does Iceberg's snapshot model support auditability requirements like DORA Article 28?

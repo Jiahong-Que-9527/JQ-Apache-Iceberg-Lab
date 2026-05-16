@@ -3,13 +3,16 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
+
 from urllib.parse import urlparse
 
 import boto3
 from botocore.config import Config as BotoConfig
 from pyiceberg.catalog.sql import SqlCatalog
 from pyiceberg.exceptions import NamespaceAlreadyExistsError, NoSuchTableError
+
+StorageBackend = Literal["minio", "seaweed"]
 
 
 def _env(name: str, default: str | None = None) -> str:
@@ -19,16 +22,47 @@ def _env(name: str, default: str | None = None) -> str:
     return value
 
 
-def get_catalog(name: str = "lab") -> SqlCatalog:
+def _backend_config(backend: StorageBackend) -> dict[str, str]:
+    if backend == "minio":
+        return {
+            "catalog_uri": _env("CATALOG_URI", "sqlite:///catalog.db"),
+            "warehouse_bucket": _env("MINIO_BUCKET", "warehouse"),
+            "s3_endpoint": _env("S3_ENDPOINT_MINIO", _env("S3_ENDPOINT", "http://minio:9000")),
+            "access_key": _env("AWS_ACCESS_KEY_ID", "minioadmin"),
+            "secret_key": _env("AWS_SECRET_ACCESS_KEY", "minioadmin"),
+            "region": _env("AWS_REGION", "us-east-1"),
+        }
+    return {
+        "catalog_uri": _env("CATALOG_URI_SEAWEED", "sqlite:///catalog_seaweed.db"),
+        "warehouse_bucket": _env("SEAWEED_BUCKET", "warehouse"),
+        "s3_endpoint": _env("S3_ENDPOINT_SEAWEED", "http://seaweedfs:8333"),
+        "access_key": _env("SEAWEED_ACCESS_KEY_ID", "seaweedadmin"),
+        "secret_key": _env("SEAWEED_SECRET_ACCESS_KEY", "seaweedadmin"),
+        "region": _env("AWS_REGION", "us-east-1"),
+    }
+
+
+def storage_console_url(backend: StorageBackend = "minio") -> str:
+    if backend == "minio":
+        return "http://localhost:9001"
+    return "http://localhost:9333"
+
+
+def get_catalog(
+    backend: StorageBackend = "minio",
+    name: str | None = None,
+) -> SqlCatalog:
+    cfg = _backend_config(backend)
+    catalog_name = name or f"lab_{backend}"
     catalog = SqlCatalog(
-        name,
-        uri=_env("CATALOG_URI", "sqlite:///catalog.db"),
-        warehouse=f"s3://{_env('MINIO_BUCKET', 'warehouse')}/",
+        catalog_name,
+        uri=cfg["catalog_uri"],
+        warehouse=f"s3://{cfg['warehouse_bucket']}/",
         **{
-            "s3.endpoint": _env("S3_ENDPOINT", "http://minio:9000"),
-            "s3.access-key-id": _env("AWS_ACCESS_KEY_ID", "minioadmin"),
-            "s3.secret-access-key": _env("AWS_SECRET_ACCESS_KEY", "minioadmin"),
-            "s3.region": _env("AWS_REGION", "us-east-1"),
+            "s3.endpoint": cfg["s3_endpoint"],
+            "s3.access-key-id": cfg["access_key"],
+            "s3.secret-access-key": cfg["secret_key"],
+            "s3.region": cfg["region"],
             "s3.force-virtual-addressing": "false",
         },
     )
@@ -50,13 +84,14 @@ def drop_table_if_exists(catalog: SqlCatalog, identifier: str) -> None:
         return
 
 
-def get_s3_client():
+def get_s3_client(backend: StorageBackend = "minio"):
+    cfg = _backend_config(backend)
     return boto3.client(
         "s3",
-        endpoint_url=_env("S3_ENDPOINT", "http://minio:9000"),
-        aws_access_key_id=_env("AWS_ACCESS_KEY_ID", "minioadmin"),
-        aws_secret_access_key=_env("AWS_SECRET_ACCESS_KEY", "minioadmin"),
-        region_name=_env("AWS_REGION", "us-east-1"),
+        endpoint_url=cfg["s3_endpoint"],
+        aws_access_key_id=cfg["access_key"],
+        aws_secret_access_key=cfg["secret_key"],
+        region_name=cfg["region"],
         config=BotoConfig(s3={"addressing_style": "path"}),
     )
 
@@ -68,18 +103,40 @@ def parse_s3_uri(uri: str) -> tuple[str, str]:
     return parsed.netloc, parsed.path.lstrip("/")
 
 
-def download_s3_uri(uri: str, destination: str | Path) -> Path:
+def download_s3_uri(
+    uri: str,
+    destination: str | Path,
+    *,
+    backend: StorageBackend = "minio",
+) -> Path:
     bucket, key = parse_s3_uri(uri)
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    get_s3_client().download_file(bucket, key, str(destination))
+    get_s3_client(backend).download_file(bucket, key, str(destination))
     return destination
 
 
-def read_json_s3(uri: str) -> dict[str, Any]:
+def read_json_s3(uri: str, *, backend: StorageBackend = "minio") -> dict[str, Any]:
     bucket, key = parse_s3_uri(uri)
-    obj = get_s3_client().get_object(Bucket=bucket, Key=key)
+    obj = get_s3_client(backend).get_object(Bucket=bucket, Key=key)
     return json.loads(obj["Body"].read().decode("utf-8"))
+
+
+def list_object_keys(
+    prefix: str,
+    *,
+    backend: StorageBackend = "minio",
+    bucket: str | None = None,
+) -> list[str]:
+    cfg = _backend_config(backend)
+    bucket_name = bucket or cfg["warehouse_bucket"]
+    client = get_s3_client(backend)
+    keys: list[str] = []
+    paginator = client.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+        for item in page.get("Contents", []):
+            keys.append(item["Key"])
+    return keys
 
 
 def current_metadata_location(table: Any) -> str:
@@ -99,13 +156,18 @@ def current_metadata_location(table: Any) -> str:
     raise RuntimeError("Could not determine the table metadata location.")
 
 
-def configure_duckdb_for_minio(con: Any) -> None:
-    endpoint = _env("S3_ENDPOINT", "http://minio:9000").replace("http://", "").replace("https://", "")
+def configure_duckdb_for_s3(con: Any, backend: StorageBackend = "minio") -> None:
+    cfg = _backend_config(backend)
+    endpoint = cfg["s3_endpoint"].replace("http://", "").replace("https://", "")
     con.execute("INSTALL httpfs; LOAD httpfs;")
     con.execute("INSTALL iceberg; LOAD iceberg;")
     con.execute("SET s3_url_style='path';")
     con.execute("SET s3_use_ssl=false;")
     con.execute(f"SET s3_endpoint='{endpoint}';")
-    con.execute(f"SET s3_access_key_id='{_env('AWS_ACCESS_KEY_ID', 'minioadmin')}';")
-    con.execute(f"SET s3_secret_access_key='{_env('AWS_SECRET_ACCESS_KEY', 'minioadmin')}';")
-    con.execute(f"SET s3_region='{_env('AWS_REGION', 'us-east-1')}';")
+    con.execute(f"SET s3_access_key_id='{cfg['access_key']}';")
+    con.execute(f"SET s3_secret_access_key='{cfg['secret_key']}';")
+    con.execute(f"SET s3_region='{cfg['region']}';")
+
+
+def configure_duckdb_for_minio(con: Any) -> None:
+    configure_duckdb_for_s3(con, "minio")

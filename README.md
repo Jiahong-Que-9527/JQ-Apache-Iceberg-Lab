@@ -1,6 +1,6 @@
 # JQ Apache Iceberg Lab
 
-> Twelve hands-on experiments that take you from "never touched Iceberg" to "can defend Iceberg architecture in a senior data engineer interview" — built around **real interview questions**, with a deliberate **"Break it"** section in every experiment, and an optional **EU regulatory track** (DORA, BaFin/BAIT, MiFID II, GDPR) you won't find in any other Iceberg tutorial.
+> Thirteen hands-on experiments that take you from "never touched Iceberg" to "can defend Iceberg architecture in a senior data engineer interview" — built around **real interview questions**, with a deliberate **"Break it"** section in every experiment, and an optional **EU regulatory track** (DORA, BaFin/BAIT, MiFID II, GDPR) you won't find in any other Iceberg tutorial.
 
 [![License: MIT](https://img.shields.io/badge/Code-MIT-blue.svg)](LICENSE)
 [![Content: CC BY-SA 4.0](https://img.shields.io/badge/Content-CC--BY--SA--4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
@@ -38,7 +38,7 @@ This is a **learning sandbox**, not a production deployment guide. For canonical
 
 | Path | Purpose | Status |
 | --- | --- | --- |
-| [`experiments/`](experiments/) | Twelve guided experiments | ✅ Available |
+| [`experiments/`](experiments/) | Thirteen guided experiments | ✅ Available |
 | [`experiments/README.md`](experiments/README.md) | Series index and interview questions | ✅ Available |
 | [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build spec for the local sandbox | ✅ Available |
 | [`docs/operation-guide.md`](docs/operation-guide.md) | Step-by-step runbook for setup, reset, cleanup, and troubleshooting | ✅ Available |
@@ -54,7 +54,7 @@ The experiments run against the local sandbox under [`lab/`](lab/), the official
 | --- | --- | --- |
 | **Crunch path** (experiments 01, 02, 04, 05, 07, 09) | ~1 week part-time | Bar for mid-level Iceberg interviews |
 | **Full Foundation + Mechanics** (01–08) | ~2 weeks part-time | Bar for senior generalist roles |
-| **Full series including specialization** (01–12) | ~3 weeks part-time | Bar for senior platform roles, with EU FinTech differentiation |
+| **Full series including specialization** (01–13) | ~3 weeks part-time | Bar for senior platform roles, with EU FinTech differentiation |
 
 Each experiment runs 60-120 minutes.
 
@@ -62,7 +62,7 @@ Each experiment runs 60-120 minutes.
 
 ## The interview questions this prepares you for
 
-The series covers 30 questions across physical layout, manifests, catalogs, transactions, schema evolution, partition evolution, concurrent writers, small files, snapshot expiry, format tradeoffs, and EU regulatory use cases.
+The series covers 33 questions across physical layout, manifests, catalogs, transactions, schema evolution, partition evolution, concurrent writers, small files, snapshot expiry, format tradeoffs, object storage selection, and EU regulatory use cases.
 
 See the [full question list](experiments/README.md).
 
@@ -82,8 +82,10 @@ cd lab
 Then open:
 
 - JupyterLab: http://localhost:8888
-- MinIO console: http://localhost:9001
-- MinIO login: `minioadmin` / `minioadmin`
+- MinIO console: http://localhost:9001 (`minioadmin` / `minioadmin`)
+- SeaweedFS master UI: http://localhost:9333 (S3 API on port `8333`, `seaweedadmin` / `seaweedadmin`)
+
+Experiments 01–12 use MinIO only. Experiment 13 runs **both** backends side by side.
 
 Start with `notebooks/00_setup_check.ipynb`, then `notebooks/01_basics.ipynb`, then `notebooks/02_metadata_anatomy.ipynb`.
 
@@ -94,7 +96,7 @@ cd lab
 ./reset.sh --confirm
 ```
 
-Reset deletes `lab/warehouse/` and `lab/catalog.db`, then recreates MinIO and Jupyter. Runtime state is gitignored.
+Reset deletes `lab/warehouse-minio/`, `lab/warehouse-seaweed/`, `lab/catalog.db`, and `lab/catalog_seaweed.db`, then recreates both object stores and Jupyter. Runtime state is gitignored.
 
 ### 3. Open the experiment series
 
@@ -107,6 +109,23 @@ Create a local file called `interview-faq.md`. For each experiment, write your a
 ### 5. Start with Experiment 01
 
 → [`experiments/01-first-table.md`](experiments/01-first-table.md)
+
+### 6. End a study session (keep progress)
+
+```bash
+cd lab
+docker compose stop
+```
+
+Tomorrow: `cd lab && ./init.sh` (or `docker compose start` if containers still exist). Details: [`docs/operation-guide.md`](docs/operation-guide.md) §8.
+
+### 7. Close the lab completely
+
+When you are finished with the repo on this machine (free disk, remove all tables):
+
+→ [`docs/operation-guide.md`](docs/operation-guide.md) §10 — `docker compose down` + delete `warehouse-*` and `catalog*.db`.
+
+Experiment 13 full walkthrough (start → notebook → Break it → wrap-up): operation guide §5.3.
 
 ---
 
@@ -127,7 +146,7 @@ Every experiment follows the same loop:
 | --- | --- | --- |
 | **Foundation** | 01–04 | Explain Iceberg's physical layout, query plan, and catalog model from memory |
 | **Mechanics** | 05–08 | Defend Iceberg's behavior under schema change, partition evolution, and concurrent writes |
-| **Production** | 09–11 | Operate Iceberg at scale: small files, GC, format selection |
+| **Production** | 09–11, 13 | Operate Iceberg at scale: small files, GC, format selection, object storage |
 | **Specialization** | 12 | Defend Iceberg as a compliance architecture choice for EU regulated environments |
 
 Experiments **02, 05, 09, 10, and 12** include optional 🇪🇺 regulatory angle sections.
@@ -163,13 +182,15 @@ The [`lab/`](lab/) directory provides a lightweight local environment:
 │  │  PyIceberg · DuckDB · PyArrow        │   │
 │  └─────────────┬────────────────────────┘   │
 │                │                            │
-│  ┌─────────────┴──────────┐                 │
-│  │  catalog.db (SQLite)   │                 │
-│  └─────────────┬──────────┘                 │
-│  ┌─────────────┴──────────┐                 │
-│  │  MinIO (Docker)        │                 │
-│  │  bucket: warehouse     │                 │
-│  └────────────────────────┘                 │
+│  ┌─────────────┴──────────────────────────┐ │
+│  │  catalog.db · catalog_seaweed.db       │ │
+│  │  (SQLite, one per storage backend)     │ │
+│  └─────────────┬──────────────────────────┘ │
+│       ┌────────┴────────┐                   │
+│  ┌────┴────┐      ┌─────┴──────┐            │
+│  │ MinIO   │      │ SeaweedFS  │            │
+│  │ :9000   │      │ S3 :8333   │            │
+│  └─────────┘      └────────────┘            │
 └─────────────────────────────────────────────┘
 ```
 

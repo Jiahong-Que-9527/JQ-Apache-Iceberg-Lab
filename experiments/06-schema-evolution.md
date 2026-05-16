@@ -355,6 +355,18 @@ Cover:
 
 ---
 
+## Session wrap-up (close the loop)
+
+1. Confirm hands-on is done: add/rename/drop schema changes applied without rewriting old Parquet. Optional notebook: `lab/notebooks/03_schema_evolution.ipynb`.
+2. Update `interview-faq.md` with your **after** answer to this experiment's interview question.
+3. If Break it left the lab in a broken state: `cd lab && ./reset.sh --confirm` — see [operation guide §7](../docs/operation-guide.md).
+4. **End of day** (pause until tomorrow, keep data): `cd lab && docker compose stop` — [operation guide §8](../docs/operation-guide.md).
+5. **Done with the lab on this machine** (remove all local tables and catalogs): [operation guide §10](../docs/operation-guide.md).
+
+Lab lifecycle overview: [operation guide §0](../docs/operation-guide.md).
+
+---
+
 ## Next up
 
 → [Experiment 07: Hidden partitioning](07-hidden-partitioning.md) — why Hive partition columns are an antipattern, and how Iceberg fixes it.
