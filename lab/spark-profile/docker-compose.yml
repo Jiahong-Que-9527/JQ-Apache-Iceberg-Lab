@@ -59,7 +59,7 @@ services:
     ports:
       - "127.0.0.1:8181:8181"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8181/health || exit 1"]
+      test: ["CMD", "/home/nonroot/lakekeeper", "healthcheck", "-s"]
       interval: 3s
       timeout: 3s
       retries: 30
@@ -76,9 +76,13 @@ services:
         curl -fsS -X POST http://lakekeeper:8181/management/v1/bootstrap
         -H 'Content-Type: application/json'
         -d '{"accept-terms-of-use": true}' || true;
-        curl -fsS -X POST http://lakekeeper:8181/management/v1/warehouse
+        status=$$(curl -sS -o /tmp/warehouse-response.txt -w "%{http_code}" -X POST http://lakekeeper:8181/management/v1/warehouse
         -H 'Content-Type: application/json'
-        -d '{"warehouse-name":"lab","storage-profile":{"type":"s3","bucket":"warehouse","key-prefix":"","endpoint":"http://minio:9000","region":"us-east-1","path-style-access":true,"flavor":"minio","sts-enabled":false},"storage-credential":{"type":"s3","credential-type":"access-key","aws-access-key-id":"minioadmin","aws-secret-access-key":"minioadmin"}}' || true
+        -d '{"warehouse-name":"lab","storage-profile":{"type":"s3","bucket":"warehouse","key-prefix":"","endpoint":"http://minio:9000","region":"us-east-1","path-style-access":true,"flavor":"minio","sts-enabled":false},"storage-credential":{"type":"s3","credential-type":"access-key","aws-access-key-id":"minioadmin","aws-secret-access-key":"minioadmin"}}');
+        case "$$status" in
+          200|201|204|409) cat /tmp/warehouse-response.txt ;;
+          *) cat /tmp/warehouse-response.txt >&2; exit 1 ;;
+        esac
     restart: "no"
 
   # ----- Spark 3.5 with Iceberg 1.7 runtime, configured to talk to Lakekeeper -----
