@@ -78,6 +78,55 @@ Note governance differences:
 
 ---
 
+## 💥 Break it
+
+This experiment is decision-framework heavy, so the breakage is about breaking bad arguments rather than corrupting a table.
+
+### Break 1: make the lazy Iceberg argument
+
+Write this answer in your notes:
+
+> "I would choose Iceberg because it is open source and avoids Databricks lock-in."
+
+Now attack it:
+
+- Delta Lake is also open source.
+- Delta has strong non-Databricks readers.
+- Databricks supports Iceberg reads through UniForm.
+- A self-hosted Iceberg catalog can still become an operational bottleneck.
+
+**Insight:** "open" is not enough. A senior answer must name concrete requirements: engine fleet, catalog ownership, schema evolution, governance, write patterns, and vendor strategy.
+
+### Break 2: choose Delta for the wrong workload
+
+Assume a platform with Spark, Trino, DuckDB, Python services, Snowflake external reads, and no Databricks contract. Force yourself to choose Delta anyway. What has to be true?
+
+You should end up with a short list: mature Delta readers across all engines, a catalog story that everyone can share, a security model outside Unity Catalog, and tested behavior for generated columns / UniForm / protocol features. If you cannot prove those, the choice is mostly wishful thinking.
+
+### Break 3: choose Iceberg for the wrong workload
+
+Now assume the opposite: one Databricks workspace, Spark Structured Streaming, heavy `MERGE INTO`, tight Databricks governance, and no independent Trino/Snowflake readers. Force yourself to choose Iceberg anyway.
+
+You should feel the tradeoff immediately: you are swimming away from the platform's native path. Iceberg may still be defensible for long-term portability, but it is no longer the obvious operational choice.
+
+### Break 4: test your decision tree
+
+Take three real companies or teams you know. For each one, fill this in:
+
+```text
+Team:
+Engines:
+Catalog / governance:
+Write pattern:
+Vendor constraints:
+Recommended format:
+Why not the other two:
+```
+
+If your recommendation is always Iceberg, your framework is broken.
+
+---
+
 ## 📚 Theory deep-dive
 
 ### The honest comparison
@@ -194,20 +243,20 @@ Aim for 90–120 seconds. This is a multi-part answer and interviewers expect de
 
 ---
 
-## Production tier complete ✅
+## Production format checkpoint ✅
 
-You've now finished Tier 3. Re-answer interview questions 16–23 in your `interview-faq.md` without notes. If anything is fuzzy, redo.
+You've finished the format-selection checkpoint of the production tier. Re-answer the production-format questions in your `interview-faq.md` without notes. If anything is fuzzy, redo.
 
-**Self-check question:** can you walk through a one-hour technical interview entirely from memory, covering questions 1–23, with no notes? If yes, you are at the bar for senior data engineer roles at most companies.
+**Self-check question:** can you explain why a non-Databricks, multi-engine platform often picks Iceberg without pretending Delta or Hudi are bad tools? If yes, your answer is senior-shaped.
 
-The next experiment is **the** differentiator — the one that pushes you from senior generalist to specialist.
+The next experiments move from format strategy into storage choice, regulated-data design, and production operations.
 
 ---
 
 ## Session wrap-up (close the loop)
 
 1. Confirm hands-on is done: comparison table / decision tree internalized, **after** re-answer written (90–120 s spoken). Optional notebook: `lab/notebooks/07_iceberg_vs_delta.ipynb`.
-2. Update `interview-faq.md` with your **after** answer to this experiment's interview question (and Tier 3 self-check questions 16–23 if not done yet).
+2. Update `interview-faq.md` with your **after** answer to this experiment's interview question and the format-selection self-check.
 3. If you experimented with broken catalog/storage state elsewhere: `cd lab && ./reset.sh --confirm` — [operation guide §7](../docs/operation-guide.md).
 4. **End of day** (pause until tomorrow, keep data): `cd lab && docker compose stop` — [operation guide §8](../docs/operation-guide.md).
 5. **Done with the lab on this machine** (remove all local tables and catalogs): [operation guide §10](../docs/operation-guide.md).

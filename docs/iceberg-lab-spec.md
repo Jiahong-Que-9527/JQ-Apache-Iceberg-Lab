@@ -12,7 +12,7 @@
 This is a **personal learning sandbox**, not a production system. Two constraints drive every implementation choice:
 
 1. **Start fast, reset fast.** Warm start should be under 60 seconds, reset should be under 10 seconds after images are already built.
-2. **Maximize Iceberg surface area, minimize everything else.** No Spark, Hive Metastore, Nessie, Kubernetes, or Trino. The point is to inspect Iceberg metadata and failure modes, not to operate a production stack.
+2. **Maximize Iceberg surface area, minimize everything else.** The default lab is PyIceberg + DuckDB + object storage only. Spark, Trino, and Lakekeeper live in a separate opt-in profile used only where an experiment explicitly needs JVM SQL procedures, a REST catalog server, or multi-engine validation.
 
 The user already has a production-style lakehouse with Trino, Iceberg, and MinIO. This lab must stay separate and disposable.
 
@@ -30,25 +30,29 @@ Repository root
     │   ├── DuckDB
     │   ├── PyArrow / pandas
     │   └── fastavro for Iceberg manifest inspection
-    ├── catalog.db      # SQLite Iceberg catalog, gitignored
+    ├── catalog.db          # SQLite Iceberg catalog, gitignored
     ├── warehouse-minio/    # MinIO object data, gitignored
-    └── warehouse-seaweed/  # SeaweedFS object data, gitignored
+    ├── warehouse-seaweed/  # SeaweedFS object data, gitignored
+    └── spark-profile/      # optional Spark + Trino + Lakekeeper stack
 
 MinIO container ──► bucket: warehouse
 SeaweedFS container (S3 :8333) ──► bucket: warehouse
+Spark profile ─────► joins main lab network, uses MinIO, keeps Lakekeeper state in spark-profile/state/
 ```
 
 **Why these choices:**
 
 | Component | Choice | Rationale |
 | --- | --- | --- |
-| Compute | PyIceberg + DuckDB | No JVM. Starts quickly. Lets the user inspect raw Iceberg metadata directly. |
+| Compute | PyIceberg + DuckDB by default; Spark only in `lab/spark-profile/` | Main path starts quickly and keeps the focus on metadata. Spark is reserved for experiments 14, 16, 17, 20, 21. |
 | Catalog | SQLite via PyIceberg `SqlCatalog` | Single file, zero ops, visible with `sqlite3 catalog.db`. |
 | Storage | MinIO + SeaweedFS (parallel) | MinIO is the default for experiments 01–12. SeaweedFS is added for Experiment 13 only — S3 semantics and Iceberg ops comparison without Spark or extra catalogs. |
 | Notebook | JupyterLab in Docker | Reproducible Python environment across machines. |
 | Manifest reader | `fastavro` | Iceberg manifest lists and manifests are Avro files, not Parquet files. |
+| REST catalog profile | Lakekeeper + Postgres | Production-catalog learning path for experiment 16 and shared catalog for Spark/Trino interop. |
+| JVM engines | Spark + Trino | Required for MERGE, branch-aware writes, migration procedures, and cross-engine compatibility experiments. |
 
-Explicitly rejected: Spark, Hive Metastore, Nessie, Kubernetes, Trino, AWS S3.
+Still rejected for the default lab: Hive Metastore, Nessie, Kubernetes, and AWS S3. Spark and Trino are allowed only through the documented opt-in profile.
 
 ### Why SeaweedFS is in the lab
 
@@ -89,13 +93,20 @@ JQ-Apache-Iceberg-Lab/
     │   └── 08_storage_backends.ipynb
     ├── seaweedfs/
     │   └── s3-config.json
+    ├── spark-profile/
+    │   ├── docker-compose.yml
+    │   ├── up.sh
+    │   ├── down.sh
+    │   ├── spark/
+    │   ├── trino/
+    │   └── state/                  # gitignored Lakekeeper/Postgres runtime state
     ├── scripts/
     │   └── ensure_bucket.py
     └── src/
         └── catalog_helper.py
 ```
 
-Runtime state must never be committed: `lab/catalog.db`, `lab/catalog.db-journal`, `lab/catalog_seaweed.db`, `lab/catalog_seaweed.db-journal`, `lab/warehouse/`, `lab/warehouse-minio/`, `lab/warehouse-seaweed/`, `lab/.env`, notebook checkpoints, caches, and local interview notes.
+Runtime state must never be committed: `lab/catalog.db`, `lab/catalog.db-journal`, `lab/catalog_seaweed.db`, `lab/catalog_seaweed.db-journal`, `lab/warehouse/`, `lab/warehouse-minio/`, `lab/warehouse-seaweed/`, `lab/spark-profile/state/`, `lab/.env`, notebook checkpoints, caches, and local interview notes.
 
 ---
 
@@ -121,7 +132,7 @@ Requirements:
 - MinIO exposes S3 API `9000` and console `9001`; data volume `warehouse-minio/`.
 - SeaweedFS exposes S3 API `8333` and master UI `9333`; data volume `warehouse-seaweed/`; S3 config in `seaweedfs/s3-config.json`.
 - Jupyter exposes `8888`.
-- All host port bindings must be localhost-only, for example `127.0.0.1:8888:8888`.
+- All host port bindings must be localhost-only, for example `127.0.0.1:<host-port>:<container-port>`.
 - Jupyter token and password are disabled for zero-friction local use. Add an explicit warning comment: **DO NOT use this config in any networked environment.**
 - `bucket-init` uses a pinned MinIO Client image to create the `warehouse` bucket idempotently.
 - Jupyter mounts the entire `lab/` directory at `/home/jovyan/work` so notebooks, `src/`, `catalog.db`, and `warehouse/` stay together.
@@ -203,8 +214,26 @@ Provide:
 Implementation notes:
 
 - MinIO uses `catalog.db`; Seaweed uses `catalog_seaweed.db`.
-- Default `get_catalog()` remains MinIO so experiments 01–12 are unchanged.
+- Default `get_catalog()` remains MinIO so experiments 01–12, 15, 18, and 19 stay on the lightweight path.
 - Use `s3.force-virtual-addressing = false` for path-style access on both backends.
+
+### 3.8 `lab/spark-profile/`
+
+Opt-in profile for experiments 14, 16, 17, 20, and 21.
+
+Requirements:
+
+- Requires the main lab network (`jq-apache-iceberg-lab_default`) to exist; users must run `cd lab && ./init.sh` first.
+- Services: `lakekeeper-db`, `lakekeeper-migrate`, `lakekeeper`, `lakekeeper-bootstrap`, `spark-iceberg`, and `trino`.
+- Lakekeeper image must be pinned by tag or digest, not `latest`.
+- Spark image: `tabulario/spark-iceberg:3.5.5_1.7.1`.
+- Trino image: `trinodb/trino:455`.
+- Lakekeeper UI/API binds to `127.0.0.1:8181`.
+- Trino binds to `127.0.0.1:8090`.
+- Spark's optional notebook port binds to `127.0.0.1:8889`, not `8888`, because the main lab's JupyterLab owns `8888`.
+- Postgres state lives in `lab/spark-profile/state/` and is gitignored.
+- `up.sh` should fail clearly if the main lab network is missing.
+- `down.sh` should stop the profile while preserving `state/`.
 
 ---
 
@@ -268,6 +297,12 @@ Mostly markdown. Compare protocol, schema evolution, partitioning, catalog model
 
 Experiment 13 companion: health-check MinIO and SeaweedFS, mirror Iceberg tables on both, compare object counts, run a 200-commit small-file storm, output a metrics DataFrame.
 
+### Spark-profile notebooks
+
+Spark-profile notebooks are optional companions under `lab/spark-profile/spark/notebooks/`. They should only cover experiments that already require the profile. Currently:
+
+- `14_row_level_mutations.ipynb` for experiment 14.
+
 ---
 
 ## 5. README Requirements
@@ -283,6 +318,7 @@ It must document:
 
 - Jupyter: `http://localhost:8888`
 - MinIO console: `http://localhost:9001`
+- Spark profile, when needed: `cd lab/spark-profile && ./up.sh`
 - Reset: `cd lab && ./reset.sh --confirm`
 - Localhost-only security boundary
 - The fact that runtime state is gitignored
@@ -297,6 +333,7 @@ It must document:
 - [ ] `00_setup_check.ipynb` can execute green.
 - [ ] `01_basics.ipynb` can create an Iceberg table and append data.
 - [ ] `02_metadata_anatomy.ipynb` can show the actual metadata JSON and Avro manifest chain.
+- [ ] `cd lab/spark-profile && ./up.sh` starts Lakekeeper on `8181`, Trino on `8090`, and Spark without conflicting with Jupyter on `8888`.
 - [ ] `./reset.sh --confirm` recreates a clean lab.
 - [ ] `git shortlog -sne --all` shows only `Jiahong Que <jiahongque25@gmail.com>`.
 

@@ -1,0 +1,119 @@
+name: jq-apache-iceberg-lab-spark
+
+# Opt-in profile that extends the main lab with a JVM engine (Spark + Trino)
+# and a production-grade REST catalog (Lakekeeper). The main lab keeps its
+# 60-second cold start; only experiments 14, 16, 17, 20, 21
+# need this stack.
+#
+# Usage:
+#   cd lab/spark-profile
+#   ./up.sh    # start everything
+#   ./down.sh  # stop and remove (keeps state on disk)
+#
+# This compose file expects the main lab to be running (it shares the
+# 'minio' service network from the parent stack via an external network).
+
+networks:
+  default:
+    name: jq-apache-iceberg-lab_default
+    external: true
+
+services:
+  # ----- Lakekeeper: Rust-based, spec-compliant Iceberg REST Catalog -----
+  lakekeeper-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lakekeeper
+      POSTGRES_PASSWORD: lakekeeper
+      POSTGRES_DB: lakekeeper
+    volumes:
+      - ./state/lakekeeper-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lakekeeper"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  lakekeeper-migrate:
+    image: quay.io/lakekeeper/catalog@sha256:1ba2c00044ed344924d2a761a760b5aed2f24a7330d53e08f594568f9a7a201a
+    depends_on:
+      lakekeeper-db:
+        condition: service_healthy
+    environment:
+      LAKEKEEPER__PG_DATABASE_URL_READ: postgresql://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: postgresql://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper
+    command: ["migrate"]
+    restart: "no"
+
+  lakekeeper:
+    image: quay.io/lakekeeper/catalog@sha256:1ba2c00044ed344924d2a761a760b5aed2f24a7330d53e08f594568f9a7a201a
+    depends_on:
+      lakekeeper-migrate:
+        condition: service_completed_successfully
+    environment:
+      LAKEKEEPER__PG_DATABASE_URL_READ: postgresql://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper
+      LAKEKEEPER__PG_DATABASE_URL_WRITE: postgresql://lakekeeper:lakekeeper@lakekeeper-db:5432/lakekeeper
+      LAKEKEEPER__AUTHZ_BACKEND: allow-all
+      RUST_LOG: info
+    command: ["serve"]
+    ports:
+      - "127.0.0.1:8181:8181"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8181/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+
+  lakekeeper-bootstrap:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      lakekeeper:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >
+        curl -fsS -X POST http://lakekeeper:8181/management/v1/bootstrap
+        -H 'Content-Type: application/json'
+        -d '{"accept-terms-of-use": true}' || true;
+        curl -fsS -X POST http://lakekeeper:8181/management/v1/warehouse
+        -H 'Content-Type: application/json'
+        -d '{"warehouse-name":"lab","storage-profile":{"type":"s3","bucket":"warehouse","key-prefix":"","endpoint":"http://minio:9000","region":"us-east-1","path-style-access":true,"flavor":"minio","sts-enabled":false},"storage-credential":{"type":"s3","credential-type":"access-key","aws-access-key-id":"minioadmin","aws-secret-access-key":"minioadmin"}}' || true
+    restart: "no"
+
+  # ----- Spark 3.5 with Iceberg 1.7 runtime, configured to talk to Lakekeeper -----
+  spark-iceberg:
+    image: tabulario/spark-iceberg:3.5.5_1.7.1
+    depends_on:
+      lakekeeper-bootstrap:
+        condition: service_completed_successfully
+    environment:
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      AWS_REGION: us-east-1
+      SPARK_HOME: /opt/spark
+    ports:
+      - "127.0.0.1:8080:8080"    # Spark master UI
+      - "127.0.0.1:8889:8888"    # Spark notebook, kept separate from main Jupyter :8888
+      - "127.0.0.1:10000:10000"  # Thrift server (optional)
+    volumes:
+      - ./spark/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+      - ./spark/notebooks:/home/iceberg/notebooks
+      - ../warehouse-minio:/warehouse-minio:ro   # for direct inspection only
+    command: ["bash", "-c", "tail -f /dev/null"]   # use `docker compose exec` to launch spark-sql / spark-shell
+
+  # ----- Trino: most common production read engine for Iceberg -----
+  trino:
+    image: trinodb/trino:455
+    depends_on:
+      lakekeeper-bootstrap:
+        condition: service_completed_successfully
+    ports:
+      - "127.0.0.1:8090:8080"
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/v1/info || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30

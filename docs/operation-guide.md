@@ -4,6 +4,8 @@ This guide walks through the full workflow: get the repo, start the lab, run exp
 
 **If you only read one doc for day-to-day use, read this one.** The root [`README.md`](../README.md) is the portfolio overview; each file under [`experiments/`](../experiments/) is a single lab session.
 
+If you are deciding which document to open first, use [`docs/how-to-use-this-project.md`](how-to-use-this-project.md).
+
 ---
 
 ## 0. Complete lifecycle (start → experiment → close)
@@ -31,7 +33,9 @@ Use this map to pick the right section. Every phase has concrete commands below.
          rm warehouse* catalog*.db (§10, full wipe)
 ```
 
-**Experiment 13 only:** needs **both** MinIO and SeaweedFS (started automatically by `./init.sh`). Follow §5.3 for the full 90-minute playbook.
+**Experiment 13:** needs **both** MinIO and SeaweedFS (started automatically by `./init.sh`). Follow §5.3 for the full 90-minute playbook.
+
+**Experiments 14, 16, 17, 20, 21:** also need the opt-in Spark profile (Spark + Trino + Lakekeeper). Start the main lab first, then follow §5.4.
 
 ---
 
@@ -110,7 +114,7 @@ docker compose logs jupyter --tail 50
 docker compose logs seaweedfs --tail 30
 ```
 
-Experiments **01–12** use MinIO only (`get_catalog()` default). **Experiment 13** uses both backends (`get_catalog("minio")` and `get_catalog("seaweed")`).
+Experiments **01–12, 15, 18, 19** use the main MinIO/PyIceberg lab (`get_catalog()` default). **Experiment 13** uses both backends (`get_catalog("minio")` and `get_catalog("seaweed")`). **Experiments 14, 16, 17, 20, 21** add the opt-in Spark profile for Lakekeeper, Spark SQL, Trino, and JVM-only Iceberg procedures.
 
 ## 4. Run the First Lab Notebooks
 
@@ -173,6 +177,14 @@ Do not commit `interview-faq.md` unless you intentionally want to publish it.
 | 11 | `11-iceberg-vs-delta-vs-hudi.md` | `07_iceberg_vs_delta.ipynb` | MinIO |
 | 12 | `12-iceberg-for-regulated-data.md` | (Jupyter / ad hoc) | MinIO |
 | 13 | `13-minio-vs-seaweedfs.md` | `08_storage_backends.ipynb` | **MinIO + SeaweedFS** |
+| 14 | `14-row-level-mutations.md` | `spark-profile/spark/notebooks/14_row_level_mutations.ipynb` or `spark-sql` | **Spark profile + Lakekeeper + MinIO** |
+| 15 | `15-cdc-incremental-reads.md` | (Jupyter / ad hoc) | MinIO |
+| 16 | `16-production-catalog-rest.md` | `spark-sql`, `trino`, curl, PyIceberg REST | **Spark profile + Lakekeeper + MinIO** |
+| 17 | `17-wap-branches-tags.md` | `spark-sql`, optional Trino | **Spark profile + Lakekeeper + MinIO** |
+| 18 | `18-maintenance-observability.md` | (Jupyter / ad hoc) | MinIO; Spark profile optional for some `CALL system.*` procedures |
+| 19 | `19-performance-tuning.md` | (Jupyter / ad hoc) | MinIO; Spark profile optional for some write/maintenance knobs |
+| 20 | `20-multi-engine-interop.md` | `spark-sql`, `trino`, Jupyter | **Spark profile + Lakekeeper + MinIO** |
+| 21 | `21-hive-to-iceberg-migration.md` | `spark-sql`, `trino` | **Spark profile + Lakekeeper + MinIO** |
 
 ### 5.2 After each experiment session (5-minute wrap-up)
 
@@ -212,7 +224,43 @@ cd lab
 
 Then re-run notebook Steps 2–4 only (skip the storm unless you are comparing again).
 
-**When Experiment 13 is complete:** continue to Experiment 12 (EU track) or §8/§10 below to close the lab.
+**When Experiment 13 is complete:** continue to Experiment 12 (EU track), Experiment 14 (advanced production track), or §8/§10 below to close the lab.
+
+### 5.4 Spark profile playbook (experiments 14, 16, 17, 20, 21)
+
+Start the main lab first:
+
+```bash
+cd lab
+./init.sh
+```
+
+Then start the opt-in JVM stack from inside `lab/`:
+
+```bash
+cd spark-profile
+./up.sh
+```
+
+Open or use:
+
+- Main JupyterLab: `http://localhost:8888`
+- Optional Spark notebook port: `http://localhost:8889`
+- Lakekeeper: `http://localhost:8181`
+- Trino: `http://localhost:8090`
+- Spark SQL: `cd lab/spark-profile && docker compose exec spark-iceberg spark-sql`
+- Trino CLI: `cd lab/spark-profile && docker compose exec trino trino`
+
+The Spark profile joins the main lab Docker network and uses the main lab's MinIO bucket. It has its own Lakekeeper Postgres state under `lab/spark-profile/state/`.
+
+When you finish a Spark-profile experiment:
+
+```bash
+cd lab/spark-profile
+./down.sh
+```
+
+This stops Spark, Trino, Lakekeeper, and Postgres while keeping Lakekeeper state on disk. Use the main lab reset (§7) to wipe MinIO data and SQLite catalogs; use `cd lab/spark-profile && rm -rf state/` only when you also want to wipe Lakekeeper's catalog database.
 
 ## 6. Inspect Object Storage and Catalog State
 
@@ -284,6 +332,13 @@ Then it starts the lab again. After Docker images are built, this should take on
 
 Use this when you finished a study session and will continue tomorrow. **Warehouse files and catalogs stay on disk.**
 
+If the Spark profile is running, stop it first:
+
+```bash
+cd lab/spark-profile
+./down.sh
+```
+
 If you are done for the day and want to stop all running containers while keeping data:
 
 ```bash
@@ -318,6 +373,8 @@ cd lab
 docker compose down --remove-orphans
 ```
 
+If the Spark profile is running, stop it first with `cd lab/spark-profile && ./down.sh`; it uses the main lab network.
+
 This keeps:
 
 ```text
@@ -347,6 +404,7 @@ If you want to remove containers and delete all lab runtime state:
 cd lab
 docker compose down --remove-orphans
 rm -rf warehouse-minio warehouse-seaweed warehouse catalog.db catalog.db-journal catalog_seaweed.db catalog_seaweed.db-journal
+rm -rf spark-profile/state
 ```
 
 Optional: remove the generated `.env` file too:
@@ -374,6 +432,7 @@ lab/catalog_seaweed.db-journal
 lab/warehouse/
 lab/warehouse-minio/
 lab/warehouse-seaweed/
+lab/spark-profile/state/
 lab/.ipynb_checkpoints/
 lab/src/__pycache__/
 ```
@@ -421,3 +480,11 @@ cd lab
 - **SeaweedFS not ready:** `docker compose ps` — wait for `seaweedfs` healthy before Jupyter starts.
 - **Port 8333 or 9333 in use:** stop other stacks with `docker compose down --remove-orphans`.
 - **RAM:** running MinIO + SeaweedFS + Jupyter needs roughly 4 GB free; close other Docker workloads if containers OOM.
+
+### Spark profile issues
+
+- **`network jq-apache-iceberg-lab_default not found`:** start the main lab first with `cd lab && ./init.sh`.
+- **Port 8888 already in use:** expected if the main lab is running. Spark's optional notebook port is `http://localhost:8889`; main Jupyter stays on `http://localhost:8888`.
+- **Lakekeeper unhealthy:** `cd lab/spark-profile && docker compose logs lakekeeper-db lakekeeper --tail 80`.
+- **Trino cannot list schemas:** Lakekeeper may still be bootstrapping. Run `cd lab/spark-profile && docker compose restart trino`.
+- **Need a full REST catalog reset:** `cd lab/spark-profile && ./down.sh && rm -rf state/ && ./up.sh`.

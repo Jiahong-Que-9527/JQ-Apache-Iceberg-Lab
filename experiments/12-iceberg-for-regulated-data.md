@@ -393,7 +393,7 @@ This is a 3–5 minute answer in an interview. **Practice it.** Length isn't a f
 ## Session wrap-up (close the loop)
 
 1. Confirm hands-on is done: compliance-oriented table design, snapshot/tag or audit pattern exercised, regulatory mapping understood, **after** re-answer written.
-2. Update `interview-faq.md` with your **after** answer to this experiment's interview question (and review the full 33-question list in [`experiments/README.md`](README.md)).
+2. Update `interview-faq.md` with your **after** answer to this experiment's interview question (and review the full 50-question list in [`experiments/README.md`](README.md)).
 3. If Break it left the lab in a broken state: `cd lab && ./reset.sh --confirm` — see [operation guide §7](../docs/operation-guide.md).
 4. **End of day** (pause until tomorrow, keep data): `cd lab && docker compose stop` — [operation guide §8](../docs/operation-guide.md).
 5. **Finished the entire series on this machine:** [operation guide §10](../docs/operation-guide.md) (full wipe), then follow **What to do next** below to publish and distribute.
@@ -402,16 +402,18 @@ Lab lifecycle overview: [operation guide §0](../docs/operation-guide.md).
 
 ---
 
-## You've completed the series ✅
+## Specialization checkpoint ✅
 
-If you've done all 13 experiments hands-on AND written your answers in `interview-faq.md`, you should now be able to:
+If you've done the specialization hands-on AND written your answers in `interview-faq.md`, you should now be able to:
 
-- Answer all 30 interview questions from the index without notes
+- Answer the regulated-data questions from the index without notes
 - Articulate Iceberg's architecture in any depth from 30 seconds to 30 minutes
 - Defend architectural decisions in a way that demonstrates both technical and regulatory awareness
 - Lead a senior-level technical interview confidently
 
 This puts you in the top 5–10% of candidates for data platform / data engineering roles in EU FinTech.
+
+If you are following numeric order and still have experiments 14–21 ahead, continue into the advanced production track. If you have already completed 01–21, this is your final specialization pass.
 
 ---
 

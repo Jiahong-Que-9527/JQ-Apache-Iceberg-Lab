@@ -1,6 +1,6 @@
 # JQ Apache Iceberg Lab
 
-> Thirteen hands-on experiments that take you from "never touched Iceberg" to "can defend Iceberg architecture in a senior data engineer interview" — built around **real interview questions**, with a deliberate **"Break it"** section in every experiment, and an optional **EU regulatory track** (DORA, BaFin/BAIT, MiFID II, GDPR) you won't find in any other Iceberg tutorial.
+> Twenty-one hands-on experiments that take you from "never touched Iceberg" to "can operate an Iceberg lakehouse in production AND defend every architecture decision in a senior interview" — built around **real interview questions AND real production playbooks**, with a deliberate **"Break it"** section in every experiment, an optional **Spark profile** for the experiments that need a JVM engine, and an optional **EU regulatory track** (DORA, BaFin/BAIT, MiFID II, GDPR) you won't find in any other Iceberg tutorial.
 
 [![License: MIT](https://img.shields.io/badge/Code-MIT-blue.svg)](LICENSE)
 [![Content: CC BY-SA 4.0](https://img.shields.io/badge/Content-CC--BY--SA--4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
@@ -38,11 +38,13 @@ This is a **learning sandbox**, not a production deployment guide. For canonical
 
 | Path | Purpose | Status |
 | --- | --- | --- |
-| [`experiments/`](experiments/) | Thirteen guided experiments | ✅ Available |
+| [`experiments/`](experiments/) | Twenty-one guided experiments (4 tiers) | ✅ Available |
 | [`experiments/README.md`](experiments/README.md) | Series index and interview questions | ✅ Available |
+| [`docs/how-to-use-this-project.md`](docs/how-to-use-this-project.md) | Reading path: which doc to use for which job | ✅ Available |
 | [`docs/iceberg-lab-spec.md`](docs/iceberg-lab-spec.md) | Build spec for the local sandbox | ✅ Available |
 | [`docs/operation-guide.md`](docs/operation-guide.md) | Step-by-step runbook for setup, reset, cleanup, and troubleshooting | ✅ Available |
 | [`lab/`](lab/) | Docker Compose + Jupyter notebooks + PyIceberg helpers | ✅ Runnable |
+| [`lab/spark-profile/`](lab/spark-profile/) | Opt-in Spark + Trino + Lakekeeper stack for experiments 14, 16, 17, 20, 21 | ✅ Runnable |
 
 The experiments run against the local sandbox under [`lab/`](lab/), the official [Iceberg quickstart docker-compose](https://iceberg.apache.org/spark-quickstart/), or an existing Iceberg setup.
 
@@ -52,9 +54,10 @@ The experiments run against the local sandbox under [`lab/`](lab/), the official
 
 | Path | Duration | Outcome |
 | --- | --- | --- |
-| **Crunch path** (experiments 01, 02, 04, 05, 07, 09) | ~1 week part-time | Bar for mid-level Iceberg interviews |
+| **Interview crunch** (experiments 01, 02, 04, 05, 07, 09) | ~1 week part-time | Bar for mid-level Iceberg interviews |
 | **Full Foundation + Mechanics** (01–08) | ~2 weeks part-time | Bar for senior generalist roles |
-| **Full series including specialization** (01–13) | ~3 weeks part-time | Bar for senior platform roles, with EU FinTech differentiation |
+| **Production crunch** (01–03, 05, 07–10, 14, 15, 17–19) | ~2 weeks part-time | Bar for "can be handed an existing Iceberg lakehouse and keep it healthy" |
+| **Full series including specialization** (01–21) | ~4 weeks part-time | Bar for senior platform roles, with EU FinTech differentiation |
 
 Each experiment runs 60-120 minutes.
 
@@ -62,7 +65,7 @@ Each experiment runs 60-120 minutes.
 
 ## The interview questions this prepares you for
 
-The series covers 33 questions across physical layout, manifests, catalogs, transactions, schema evolution, partition evolution, concurrent writers, small files, snapshot expiry, format tradeoffs, object storage selection, and EU regulatory use cases.
+The series covers **50 questions** across physical layout, manifests, catalogs, transactions, schema evolution, partition evolution, concurrent writers, small files, snapshot expiry, format tradeoffs, object storage selection, row-level mutations (CoW/MoR), CDC consumers, production catalogs (REST/Lakekeeper/Polaris), Write-Audit-Publish, observability, performance tuning, multi-engine interop, Hive migration, and EU regulatory use cases.
 
 See the [full question list](experiments/README.md).
 
@@ -70,7 +73,7 @@ See the [full question list](experiments/README.md).
 
 ## Quick start
 
-New here? Start with [`docs/operation-guide.md`](docs/operation-guide.md) — the end-to-end runbook from clone through your first notebooks, the experiment loop, reset, shutdown, and common fixes. The steps below are the short version; use the guide when you want the full workflow, MinIO/catalog inspection, and cleanup options.
+New here? Start with [`docs/how-to-use-this-project.md`](docs/how-to-use-this-project.md) for the document map, then use [`docs/operation-guide.md`](docs/operation-guide.md) for the end-to-end runbook from clone through your first notebooks, the experiment loop, reset, shutdown, and common fixes. The steps below are the short version.
 
 ### 1. Start the local lab
 
@@ -85,7 +88,7 @@ Then open:
 - MinIO console: http://localhost:9001 (`minioadmin` / `minioadmin`)
 - SeaweedFS master UI: http://localhost:9333 (S3 API on port `8333`, `seaweedadmin` / `seaweedadmin`)
 
-Experiments 01–12 use MinIO only. Experiment 13 runs **both** backends side by side.
+Experiments 01–12, 15, 18–19 use the main MinIO/PyIceberg lab. Experiment 13 runs **both** MinIO and SeaweedFS side by side. Experiments **14, 16, 17, 20, 21** also need the opt-in Spark profile (see below).
 
 Start with `notebooks/00_setup_check.ipynb`, then `notebooks/01_basics.ipynb`, then `notebooks/02_metadata_anatomy.ipynb`.
 
@@ -146,16 +149,27 @@ Every experiment follows the same loop:
 | --- | --- | --- |
 | **Foundation** | 01–04 | Explain Iceberg's physical layout, query plan, and catalog model from memory |
 | **Mechanics** | 05–08 | Defend Iceberg's behavior under schema change, partition evolution, and concurrent writes |
-| **Production** | 09–11, 13 | Operate Iceberg at scale: small files, GC, format selection, object storage |
+| **Production** | 09–11, 13, **14–21** | Operate Iceberg at scale: small files, GC, format selection, object storage, MERGE/CDC, REST catalog, WAP, observability, tuning, multi-engine interop, Hive migration |
 | **Specialization** | 12 | Defend Iceberg as a compliance architecture choice for EU regulated environments |
 
-Experiments **02, 05, 09, 10, and 12** include optional 🇪🇺 regulatory angle sections.
+Experiments **02, 05, 09, 10, 12, 15, 17** include optional 🇪🇺 regulatory angle sections.
+
+### The Spark profile
+
+Experiments **14, 16, 17, 20, 21** use services or APIs (Lakekeeper REST catalog, `MERGE INTO`, `CALL system.rewrite_data_files`, branch-aware writes, `add_files`) that the main PyIceberg-only lab does not provide. They use an **opt-in** stack:
+
+```bash
+cd lab/spark-profile
+./up.sh   # spark-iceberg + trino + lakekeeper, ~3 min first start
+```
+
+The main lab keeps its 60-second cold start. The Spark profile is only needed when you reach experiment 14. See [`lab/spark-profile/README.md`](lab/spark-profile/README.md) for details.
 
 ---
 
 ## EU regulatory track (the differentiator)
 
-Optional regulatory sections appear in experiments **02, 05, 09, 10, and 12**. They connect Iceberg mechanics to common EU finance interview topics:
+Optional regulatory sections appear in experiments **02, 05, 09, 10, 12, 15, 17**. They connect Iceberg mechanics to common EU finance interview topics:
 
 | Regulation | Article / Section | Iceberg mechanism covered |
 | --- | --- | --- |

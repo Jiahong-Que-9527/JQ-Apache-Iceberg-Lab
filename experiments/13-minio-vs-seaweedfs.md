@@ -335,6 +335,6 @@ Lab lifecycle overview: [operation guide §0](../docs/operation-guide.md). Full 
 
 ## Next up
 
-→ [Experiment 12: Iceberg for Regulated Data](12-iceberg-for-regulated-data.md) — EU FinTech specialty (recommended after 11 → 13 → 12).
+→ [Experiment 12: Iceberg for Regulated Data](12-iceberg-for-regulated-data.md) — EU FinTech specialty (recommended after 11 → 13 → 12), or [Experiment 14: Row-level mutations](14-row-level-mutations.md) if you are continuing straight into the advanced production track.
 
-If you skipped Experiment 12's prerequisites, finish Tier 3 self-check (questions 16–23 in [`experiments/README.md`](README.md)) first.
+If you skipped Experiment 12's prerequisites, finish the production fundamentals self-check in [`experiments/README.md`](README.md) first.
